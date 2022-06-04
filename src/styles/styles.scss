@@ -1,5 +1,6 @@
 @import 'Node';
 @import 'NodeList';
+@import 'LayerView';
 @import 'utils';
 
 * {
@@ -35,5 +36,6 @@ body {
 
     .diagram {
         display: flex; 
+        justify-content: center;
     }
 }

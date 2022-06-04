@@ -2,9 +2,11 @@
     min-width: 200px;
     width: 20vw;
     height: 82vh;
+    margin: 0 1vw;
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
+    background-color: lighten($bg-color, 1%);
 
     .parentNode {
         margin-bottom: 1.5vh;
@@ -43,6 +45,11 @@
         &::-webkit-scrollbar {
             display: none;
         }
+    }
+
+    .inputs {
+        background-color: $bg-color;
+        padding-top: 1vh;
     }
 
     .input {

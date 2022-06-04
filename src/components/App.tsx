@@ -1,6 +1,7 @@
 import * as React from 'react';
 import NodeList from './NodeList';
-import Node, {INode, INodeUpdate} from './Node';
+import LayerView from './LayerView';
+import {INode, INodeUpdate} from './Node';
 import db from '../lib/database';
 import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,7 +70,7 @@ class App extends React.Component<{}, State> {
         })
     }
 
-    addNode(content: string, comment: string) {
+    addNode(content: string, comment: string): string {
         let node: INode = {
             id: uuidv4(),
             parent: this.state.layerParent,
@@ -97,6 +98,8 @@ class App extends React.Component<{}, State> {
                 layerNodeIds: newLayerNodeIds
             }
         })
+
+        return node.id;
     }
 
     showChildren(ids: string[]) {
@@ -161,11 +164,19 @@ class App extends React.Component<{}, State> {
             return this.state.nodes[id];
         })
 
+        let nodeHierarchy: INode[] = [];
+        let currentParent = this.state.layerParent;
+        while (currentParent) {
+            nodeHierarchy.push(this.state.nodes[currentParent]);
+            currentParent = this.state.nodes[currentParent].parent;
+        }
+
         return (
             <div className="App">
                 <input type="text" placeholder='Title' contentEditable/>
                 <p className="description" contentEditable></p>
                 <div className="diagram">
+                    <LayerView nodes={nodeHierarchy.reverse()} />
                     <NodeList nodes={layerNodes} 
                     parent={this.state.nodes[this.state.layerParent]} 
                     addNode={this.addNode} 

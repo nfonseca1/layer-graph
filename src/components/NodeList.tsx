@@ -4,7 +4,7 @@ import Node, {INode, INodeUpdate} from './Node';
 interface Props {
     nodes: INode[],
     parent: INode,
-    addNode: (content: string, comment: string) => void,
+    addNode: (content: string, comment: string) => string,
     removeNode: (id: string) => void,
     viewChildren: (id: string) => void,
     updateNode: (id: string, updates: INodeUpdate) => void,
@@ -15,7 +15,8 @@ interface State {
     input: string,
     comment: string,
     parentSubComment: string,
-    parentId: string
+    parentId: string,
+    shiftKeyDown: boolean
 }
 
 class NodeList extends React.Component<Props, State> {
@@ -26,23 +27,24 @@ class NodeList extends React.Component<Props, State> {
             input: '',
             comment: '',
             parentSubComment: this.props.parent?.subComment || '',
-            parentId: this.props.parent?.id
+            parentId: this.props.parent?.id,
+            shiftKeyDown: false
         }
 
         this.addNode = this.addNode.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
-        this.onInputKeyDown = this.onInputKeyDown.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
         this.removeNode = this.removeNode.bind(this);
         this.onCommentChange = this.onCommentChange.bind(this);
-        this.onCommentKeyDown = this.onCommentKeyDown.bind(this);
         this.viewChildren = this.viewChildren.bind(this);
         this.onSubCommentChange = this.onSubCommentChange.bind(this);
         this.onSubCommentBlur = this.onSubCommentBlur.bind(this);
         this.goToParentLayer = this.goToParentLayer.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
     }
 
-    addNode() {
-        this.props.addNode(this.state.input, this.state.comment);
+    addNode(): string {
+        return this.props.addNode(this.state.input, this.state.comment);
     }
 
     onInputChange(e: React.ChangeEvent) {
@@ -51,12 +53,37 @@ class NodeList extends React.Component<Props, State> {
         })
     }
 
-    onInputKeyDown(e: React.KeyboardEvent) {
-        if (e.key === 'Enter') {
+    onKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter' && !this.state.shiftKeyDown) {
             this.addNode();
+            (document.querySelector("#nodeListInput") as HTMLElement).focus();
             this.setState({
                 input: '',
                 comment: ''
+            })
+        }
+        else if (e.key === 'Enter' && this.state.shiftKeyDown) {
+            let id = this.addNode();
+            (document.querySelector("#nodeListInput") as HTMLElement).focus();
+            this.setState({
+                input: '',
+                comment: '',
+                shiftKeyDown: false
+            }, () => {
+                this.viewChildren(id);
+            })
+        }
+        else if (e.key === 'Shift') {
+            this.setState({
+                shiftKeyDown: true
+            })
+        }
+    }
+
+    onKeyUp(e: React.KeyboardEvent) {
+        if (e.key === 'Shift') {
+            this.setState({
+                shiftKeyDown: false
             })
         }
     }
@@ -65,17 +92,6 @@ class NodeList extends React.Component<Props, State> {
         this.setState({
             comment: (e.target as HTMLInputElement).value
         })
-    }
-
-    onCommentKeyDown(e: React.KeyboardEvent) {
-        if (e.key === 'Enter') {
-            this.addNode();
-            (document.querySelector("#nodeListInput") as HTMLElement).focus();
-            this.setState({
-                input: '',
-                comment: ''
-            })
-        }
     }
 
     removeNode(id: string) {
@@ -107,6 +123,7 @@ class NodeList extends React.Component<Props, State> {
                 parentSubComment: this.props.parent.subComment
             })
         }
+        document.querySelector(".NodeList .nodes").scrollTo(0, 10000000);
     }
 
     render() {
@@ -152,16 +169,18 @@ class NodeList extends React.Component<Props, State> {
                 <div className="inputs">
                     <div className='input'>
                         <input id="nodeListInput" type='text' value={this.state.input} 
-                        onKeyDown={this.onInputKeyDown} 
+                        onKeyDown={this.onKeyDown} 
                         onChange={this.onInputChange}
+                        onKeyUp={this.onKeyUp}
                         placeholder="Node Text"
                         tabIndex={1} />
                         <button onClick={this.addNode} tabIndex={-1}>Add Node</button>
                     </div>
                     <div className='comment'>
                         <input id="nodeListComment" type='text' value={this.state.comment} 
-                        onKeyDown={this.onCommentKeyDown} 
+                        onKeyDown={this.onKeyDown} 
                         onChange={this.onCommentChange} 
+                        onKeyUp={this.onKeyUp}
                         placeholder="Comment" 
                         tabIndex={2}/>
                     </div>
