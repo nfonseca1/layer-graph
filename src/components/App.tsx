@@ -1,12 +1,13 @@
 import * as React from 'react';
 import NodeList from './NodeList';
-import Node, {INode} from './Node';
+import Node, {INode, INodeUpdate} from './Node';
 import db from '../lib/database';
 import { v4 as uuidv4 } from 'uuid';
 
 type INodes = {[key: string]: INode}
 
 interface State {
+    rootNodeIds: string[]
     nodes: INodes,
     layerNodeIds: string[],
     layerParent: string
@@ -38,6 +39,7 @@ class App extends React.Component<{}, State> {
         super(props);
 
         this.state = {
+            rootNodeIds: [],
             nodes: {},
             layerNodeIds: [],
             layerParent: null
@@ -46,6 +48,9 @@ class App extends React.Component<{}, State> {
         this.addNode = this.addNode.bind(this);
         this.showChildren = this.showChildren.bind(this);
         this.removeNode = this.removeNode.bind(this);
+        this.viewChildren = this.viewChildren.bind(this);
+        this.updateNode = this.updateNode.bind(this);
+        this.goToParentLayer = this.goToParentLayer.bind(this);
     }
 
     async componentDidMount(): Promise<void> {
@@ -73,13 +78,24 @@ class App extends React.Component<{}, State> {
             subComment: '',
             channel: 1
         }
-        let parent = this.state.nodes[this.state.layerParent];
-        if (parent) parent.children.push(node.id);
 
-        this.setState((state) => ({
-            nodes: {...state.nodes, [node.id]: node},
-            layerNodeIds: [...state.layerNodeIds, node.id]
-        }))
+        this.setState((state) => {
+            let newLayerNodeIds = [...state.layerNodeIds];
+            newLayerNodeIds.push(node.id);
+
+            let newNodes = {...state.nodes}
+            newNodes[node.id] = node;
+            let newParent = newNodes[state.layerParent]
+            if (newParent) newParent.children.push(node.id);
+
+            let rootIds = state.layerParent ? [...state.rootNodeIds] : [...state.rootNodeIds, node.id];
+
+            return {
+                rootNodeIds: rootIds,
+                nodes: newNodes,
+                layerNodeIds: newLayerNodeIds
+            }
+        })
     }
 
     showChildren(ids: string[]) {
@@ -101,6 +117,37 @@ class App extends React.Component<{}, State> {
         })
     }
 
+    viewChildren(id: string) {
+        this.setState({
+            layerNodeIds: this.state.nodes[id].children,
+            layerParent: id
+        })
+    }
+
+    updateNode(id: string, updates: INodeUpdate) {
+        let newNode: INode = {...this.state.nodes[id]}
+        for (const [key, value] of Object.entries(updates)) {
+            newNode[key] = value;
+        }
+
+        this.setState((state) => ({
+            nodes: {...state.nodes, ...{[id]: newNode}}
+        }))
+    }
+
+    goToParentLayer() {
+        this.setState((state) => {
+            let parent = state.nodes[state.nodes[state.layerParent].parent];
+            let rootNodes = []
+            if (parent) rootNodes = parent.children;
+            else rootNodes = this.state.rootNodeIds;
+            return {
+                layerParent: state.nodes[state.layerParent].parent,
+                layerNodeIds: rootNodes
+            }
+        })
+    }
+
     render() {
         let layerNodes: INode[] = this.state.layerNodeIds.map(id => {
             return this.state.nodes[id];
@@ -111,7 +158,13 @@ class App extends React.Component<{}, State> {
                 <input type="text" placeholder='Title' contentEditable/>
                 <p className="description" contentEditable></p>
                 <div className="diagram">
-                    <NodeList nodes={layerNodes} addNode={this.addNode} removeNode={this.removeNode} />
+                    <NodeList nodes={layerNodes} 
+                    parent={this.state.nodes[this.state.layerParent]} 
+                    addNode={this.addNode} 
+                    removeNode={this.removeNode} 
+                    viewChildren={this.viewChildren}
+                    updateNode={this.updateNode}
+                    goToParentLayer={this.goToParentLayer} />
                 </div>
             </div>
         )

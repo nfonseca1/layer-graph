@@ -55,7 +55,11 @@ $node-color: lighten($bg-color, 10%);
         padding: 2px 8px;
         font-size: .8em;
         text-align: center;
-        color: $text-color;
+        color: darken($text-color, 7%);
+        overflow-y: scroll;
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
 
     .nodeBtn {

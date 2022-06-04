@@ -11,8 +11,19 @@ export interface INode {
 	styling?: {}
 }
 
+export interface INodeUpdate {
+	parent?: string,
+	children?: string[]
+	content?: string,
+	comment?: string,
+    subComment?: string,
+	channel?: number,
+	styling?: {}
+}
+
 interface Props extends INode {
-    removeNode: (id: string) => void 
+    removeNode: (id: string) => void,
+    viewChildren: (id: string) => void
 }
 
 interface State {
@@ -35,6 +46,7 @@ class Node extends React.Component<Props, State> {
         this.editNode = this.editNode.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
+        this.viewChildren = this.viewChildren.bind(this);
     }
 
     removeNode() {
@@ -61,13 +73,17 @@ class Node extends React.Component<Props, State> {
         })
     }
 
+    viewChildren() {
+        this.props.viewChildren(this.props.id);
+    }
+
     render() {
         let content: JSX.Element;
         if (this.state.editMode) {
             content = <textarea value={this.state.content} onChange={this.handleChange} onBlur={this.handleBlur}></textarea>
         }
         else {
-            content = <p>{this.state.content}</p>
+            content = <p onClick={this.viewChildren}>{this.state.content}</p>
         }
 
         return (

@@ -1,15 +1,21 @@
 import * as React from 'react';
-import Node, {INode} from './Node';
+import Node, {INode, INodeUpdate} from './Node';
 
 interface Props {
     nodes: INode[],
+    parent: INode,
     addNode: (content: string, comment: string) => void,
-    removeNode: (id: string) => void
+    removeNode: (id: string) => void,
+    viewChildren: (id: string) => void,
+    updateNode: (id: string, updates: INodeUpdate) => void,
+    goToParentLayer: () => void
 }
 
 interface State {
     input: string,
-    comment: string
+    comment: string,
+    parentSubComment: string,
+    parentId: string
 }
 
 class NodeList extends React.Component<Props, State> {
@@ -18,7 +24,9 @@ class NodeList extends React.Component<Props, State> {
 
         this.state = {
             input: '',
-            comment: ''
+            comment: '',
+            parentSubComment: this.props.parent?.subComment || '',
+            parentId: this.props.parent?.id
         }
 
         this.addNode = this.addNode.bind(this);
@@ -27,6 +35,10 @@ class NodeList extends React.Component<Props, State> {
         this.removeNode = this.removeNode.bind(this);
         this.onCommentChange = this.onCommentChange.bind(this);
         this.onCommentKeyDown = this.onCommentKeyDown.bind(this);
+        this.viewChildren = this.viewChildren.bind(this);
+        this.onSubCommentChange = this.onSubCommentChange.bind(this);
+        this.onSubCommentBlur = this.onSubCommentBlur.bind(this);
+        this.goToParentLayer = this.goToParentLayer.bind(this);
     }
 
     addNode() {
@@ -70,6 +82,33 @@ class NodeList extends React.Component<Props, State> {
         this.props.removeNode(id);
     }
 
+    viewChildren(id: string) {
+        this.props.viewChildren(id);
+    }
+
+    onSubCommentChange(e: React.ChangeEvent) {
+        this.setState({
+            parentSubComment: (e.target as HTMLInputElement).value
+        })
+    }
+
+    onSubCommentBlur() {
+        this.props.updateNode(this.props.parent.id, {subComment: this.state.parentSubComment});
+    }
+
+    goToParentLayer() {
+        this.props.goToParentLayer();
+    }
+    
+    componentDidUpdate(): void {
+        if (this.props.parent && this.state.parentId !== this.props.parent.id) {
+            this.setState({
+                parentId: this.props.parent.id,
+                parentSubComment: this.props.parent.subComment
+            })
+        }
+    }
+
     render() {
         let nodes: JSX.Element[] = this.props.nodes.map(n => {
             return (
@@ -82,12 +121,30 @@ class NodeList extends React.Component<Props, State> {
                 channel={n.channel} 
                 styling={n.styling}
                 removeNode={this.removeNode}
-                key={n.id} />
+                key={n.id}
+                viewChildren={this.viewChildren} />
             )
         })
 
+        let parent: JSX.Element;
+        if (this.props.parent) {
+            parent = (
+            <div className="parentNode">
+                <div className="content" onClick={this.goToParentLayer}>
+                    {this.props.parent.content}
+                </div>
+                <textarea className="subComment" 
+                value={this.state.parentSubComment}
+                onChange={this.onSubCommentChange}
+                onBlur={this.onSubCommentBlur}>
+                </textarea>
+            </div>
+            )
+        }
+
         return (
             <div className="NodeList">
+                {parent}
                 <div className='nodes'>
                     {nodes}
                 </div>
