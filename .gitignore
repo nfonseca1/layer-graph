@@ -1,0 +1,9 @@
+node_modules
+.vscode
+dist/*
+!dist/assets/
+notes
+Misc
+.env
+app.js*
+/lib/*.js*

@@ -1,0 +1,26 @@
+.NodeList {
+    min-width: 200px;
+    width: 20vw;
+    height: 60vh;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .nodes {
+        overflow-y: scroll;
+        padding: 1em;
+    }
+
+    .input {
+        height: 30px;
+        display: flex;
+        justify-content: space-between;
+        flex-direction: row;
+        font-size: 0.4em;
+
+        button {
+            width: 35%;
+            margin-left: 5px;
+        }
+    }
+}
