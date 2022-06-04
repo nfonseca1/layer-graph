@@ -23,7 +23,8 @@ export interface INodeUpdate {
 
 interface Props extends INode {
     removeNode: (id: string) => void,
-    viewChildren: (id: string) => void
+    viewChildren: (id: string) => void,
+    updateNode: (id: string, updates: INodeUpdate) => void
 }
 
 interface State {
@@ -47,6 +48,8 @@ class Node extends React.Component<Props, State> {
         this.handleChange = this.handleChange.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
         this.viewChildren = this.viewChildren.bind(this);
+        this.onCommentChange = this.onCommentChange.bind(this);
+        this.onCommentBlur = this.onCommentBlur.bind(this);
     }
 
     removeNode() {
@@ -54,9 +57,14 @@ class Node extends React.Component<Props, State> {
     }
 
     editNode() {
+        let editMode = this.state.editMode;
         this.setState((state) => ({
             editMode: !state.editMode
-        }))
+        }), () => {
+            if (editMode === true) {
+                this.props.updateNode(this.props.id, {content: this.state.content})
+            }
+        })
     }
 
     handleChange(e: React.ChangeEvent) {
@@ -68,13 +76,30 @@ class Node extends React.Component<Props, State> {
     }
 
     handleBlur(e: React.FocusEvent) {
+        let editMode = this.state.editMode;
         this.setState({
             editMode: false
+        }, () => {
+            if (editMode === true) {
+                this.props.updateNode(this.props.id, {content: this.state.content})
+            }
         })
     }
 
     viewChildren() {
         this.props.viewChildren(this.props.id);
+    }
+
+    onCommentChange(e: React.ChangeEvent) {
+        let value = (e.target as HTMLInputElement).value;
+        value = value.replace(/[\r\n\v]+/g, '');
+        this.setState({
+            comment: value
+        })
+    }
+
+    onCommentBlur() {
+        this.props.updateNode(this.props.id, {comment: this.state.comment})
     }
 
     render() {
@@ -89,7 +114,9 @@ class Node extends React.Component<Props, State> {
         return (
             <div className="Node">
                 {content}
-                <div className='commentBubble'>{this.state.comment}</div>
+                <textarea className='commentBubble' value={this.state.comment} 
+                onChange={this.onCommentChange}
+                onBlur={this.onCommentBlur}></textarea>
                 <div className='deleteBtn' onClick={this.removeNode}><span>X</span></div>
                 <div className='editBtn' onMouseDown={this.editNode}><span>E</span></div>
             </div>

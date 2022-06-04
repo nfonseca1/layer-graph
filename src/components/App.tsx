@@ -2,9 +2,10 @@ import * as React from 'react';
 import NodeList from './NodeList';
 import Node, {INode, INodeUpdate} from './Node';
 import db from '../lib/database';
+import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 
-type INodes = {[key: string]: INode}
+export type INodes = {[key: string]: INode}
 
 interface State {
     rootNodeIds: string[]
@@ -106,13 +107,20 @@ class App extends React.Component<{}, State> {
 
     removeNode(id: string) {
         this.setState((state) => {
-            let newNodes = state.nodes;
-            let newLayerNodes = state.layerNodeIds;
+            let newNodes = {...state.nodes};
+            let newLayerNodes = [...state.layerNodeIds];
+            utils.deleteNodes(newNodes, newNodes[id].children);
             delete newNodes[id];
             newLayerNodes = newLayerNodes.filter(nodeId => nodeId !== id);
+
+            let newRootIds = state.layerParent 
+                ? state.rootNodeIds 
+                : state.rootNodeIds.filter(rootId => rootId !== id);
+
             return {
                 nodes: newNodes,
-                layerNodeIds: newLayerNodes
+                layerNodeIds: newLayerNodes,
+                rootNodeIds: newRootIds
             }
         })
     }

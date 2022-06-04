@@ -122,7 +122,8 @@ class NodeList extends React.Component<Props, State> {
                 styling={n.styling}
                 removeNode={this.removeNode}
                 key={n.id}
-                viewChildren={this.viewChildren} />
+                viewChildren={this.viewChildren}
+                updateNode={this.props.updateNode} />
             )
         })
 
