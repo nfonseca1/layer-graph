@@ -63,13 +63,13 @@ class App extends React.Component<{}, State> {
         })
     }
 
-    addNode(content: string) {
+    addNode(content: string, comment: string) {
         let node: INode = {
             id: uuidv4(),
             parent: this.state.layerParent,
             children: [],
             content: content,
-            comment: '',
+            comment: comment,
             subComment: '',
             channel: 1
         }

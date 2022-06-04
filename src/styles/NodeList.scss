@@ -1,14 +1,18 @@
 .NodeList {
     min-width: 200px;
     width: 20vw;
-    height: 60vh;
+    height: 82vh;
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
 
     .nodes {
         overflow-y: scroll;
-        padding: 1em;
+        padding: 1.5em 1em 1em 1em;
+        height: 91%;
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
 
     .input {
@@ -16,11 +20,16 @@
         display: flex;
         justify-content: space-between;
         flex-direction: row;
-        font-size: 0.4em;
+        font-size: 0.5rem;
 
         button {
             width: 35%;
             margin-left: 5px;
         }
+    }
+
+    .comment {
+        @extend .input;
+        margin-top: 5px;
     }
 }

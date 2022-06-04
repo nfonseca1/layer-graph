@@ -3,12 +3,13 @@ import Node, {INode} from './Node';
 
 interface Props {
     nodes: INode[],
-    addNode: any,
+    addNode: (content: string, comment: string) => void,
     removeNode: (id: string) => void
 }
 
 interface State {
-    input: string
+    input: string,
+    comment: string
 }
 
 class NodeList extends React.Component<Props, State> {
@@ -16,31 +17,51 @@ class NodeList extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            input: ''
+            input: '',
+            comment: ''
         }
 
         this.addNode = this.addNode.bind(this);
-        this.handleInput = this.handleInput.bind(this);
-        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.onInputChange = this.onInputChange.bind(this);
+        this.onInputKeyDown = this.onInputKeyDown.bind(this);
         this.removeNode = this.removeNode.bind(this);
+        this.onCommentChange = this.onCommentChange.bind(this);
+        this.onCommentKeyDown = this.onCommentKeyDown.bind(this);
     }
 
     addNode() {
-        this.props.addNode(this.state.input);
+        this.props.addNode(this.state.input, this.state.comment);
     }
 
-    handleInput(e: React.ChangeEvent) {
+    onInputChange(e: React.ChangeEvent) {
         this.setState({
             input: (e.target as HTMLInputElement).value
         })
     }
 
-    handleKeyDown(e: React.KeyboardEvent) {
+    onInputKeyDown(e: React.KeyboardEvent) {
         if (e.key === 'Enter') {
             this.addNode();
-            (e.target as HTMLInputElement).value = '';
             this.setState({
-                input: (e.target as HTMLInputElement).value
+                input: '',
+                comment: ''
+            })
+        }
+    }
+
+    onCommentChange(e: React.ChangeEvent) {
+        this.setState({
+            comment: (e.target as HTMLInputElement).value
+        })
+    }
+
+    onCommentKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter') {
+            this.addNode();
+            (document.querySelector("#nodeListInput") as HTMLElement).focus();
+            this.setState({
+                input: '',
+                comment: ''
             })
         }
     }
@@ -70,9 +91,22 @@ class NodeList extends React.Component<Props, State> {
                 <div className='nodes'>
                     {nodes}
                 </div>
-                <div className='input'>
-                    <input id="nodeListInput" type='text' value={this.state.input} onKeyDown={this.handleKeyDown} onChange={this.handleInput} />
-                    <button onClick={this.addNode}>Add Node</button>
+                <div className="inputs">
+                    <div className='input'>
+                        <input id="nodeListInput" type='text' value={this.state.input} 
+                        onKeyDown={this.onInputKeyDown} 
+                        onChange={this.onInputChange}
+                        placeholder="Node Text"
+                        tabIndex={1} />
+                        <button onClick={this.addNode} tabIndex={-1}>Add Node</button>
+                    </div>
+                    <div className='comment'>
+                        <input id="nodeListComment" type='text' value={this.state.comment} 
+                        onKeyDown={this.onCommentKeyDown} 
+                        onChange={this.onCommentChange} 
+                        placeholder="Comment" 
+                        tabIndex={2}/>
+                    </div>
                 </div>
             </div>
         )

@@ -17,7 +17,8 @@ interface Props extends INode {
 
 interface State {
     editMode: boolean,
-    content: string
+    content: string,
+    comment: string
 }
 
 class Node extends React.Component<Props, State> {
@@ -26,7 +27,8 @@ class Node extends React.Component<Props, State> {
 
         this.state = {
             editMode: false,
-            content: this.props.content
+            content: this.props.content,
+            comment: this.props.comment
         }
 
         this.removeNode = this.removeNode.bind(this);
@@ -71,6 +73,7 @@ class Node extends React.Component<Props, State> {
         return (
             <div className="Node">
                 {content}
+                <div className='commentBubble'>{this.state.comment}</div>
                 <div className='deleteBtn' onClick={this.removeNode}><span>X</span></div>
                 <div className='editBtn' onMouseDown={this.editNode}><span>E</span></div>
             </div>
