@@ -2,7 +2,7 @@ import {INode} from '../components/Node';
 import {IDiagram} from '../components/App';
 
 export function getNodes(id: string): Promise<INode[]> {
-    return fetch('/getNodes')
+    return fetch('/getNodes?diagramId=' + id)
     .then(response => {
         return response.json();
     })
@@ -13,7 +13,7 @@ export function getNodes(id: string): Promise<INode[]> {
 }
 
 export function getDiagram(id: string): Promise<IDiagram> {
-    return fetch('/getDiagram')
+    return fetch('/getDiagram?diagramId=' + id)
     .then(response => {
         return response.json();
     })
@@ -29,7 +29,10 @@ export function setNodes(nodes: INode[]): Promise<void | Response> {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(nodes)
+        body: JSON.stringify({
+            nodes: nodes,
+            diagramId: '12345'
+        })
     })
     .catch(e => console.error(e));
 }
@@ -40,7 +43,10 @@ export function setDiagram(diagram: IDiagram): Promise<void | Response> {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(diagram)
+        body: JSON.stringify({
+            diagram: diagram,
+            diagramId: '12345'
+        })
     })
     .catch(e => console.error(e));
 }
