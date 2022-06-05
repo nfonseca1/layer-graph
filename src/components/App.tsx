@@ -31,11 +31,11 @@ enum Locked {
 }
 
 export interface IDiagram {
-    Id: string,
-	Title: string,
-	Description: string
-	Tags: string[]
-	Locked: Locked,
+    id: string,
+	title: string,
+	description: string
+	tags?: string[]
+	locked?: Locked,
 	rootNodes: string[],
 	channels: {
         name: string,
@@ -86,8 +86,11 @@ class App extends React.Component<{}, State> {
         }
 
         this.setState({
+            rootNodeIds: diagram.rootNodes || [],
             nodes: nodesObj,
-            layerNodeIds: diagram.rootNodes || []
+            layerNodeIds: diagram.rootNodes || [],
+            channels: diagram.channels?.length || 1,
+            channelOptions: diagram.channels || []
         })
     }
 
@@ -118,6 +121,15 @@ class App extends React.Component<{}, State> {
                 nodes: newNodes,
                 layerNodeIds: newLayerNodeIds
             }
+        }, () => {
+            db.setNodes(Object.values(this.state.nodes));
+            db.setDiagram({
+                id: '',
+                title: '',
+                description: '',
+                rootNodes: this.state.rootNodeIds,
+                channels: this.state.channelOptions
+            })
         })
 
         return node.id;
@@ -137,15 +149,29 @@ class App extends React.Component<{}, State> {
             delete newNodes[id];
             newLayerNodes = newLayerNodes.filter(nodeId => nodeId !== id);
 
-            let newRootIds = state.layerParent 
-                ? state.rootNodeIds 
-                : state.rootNodeIds.filter(rootId => rootId !== id);
+            let newRootIds;
+            if (state.layerParent) {
+                newRootIds = state.rootNodeIds;
+                newNodes[state.layerParent].children = newLayerNodes;
+            }
+            else {
+                newRootIds = state.rootNodeIds.filter(rootId => rootId !== id);
+            }
 
             return {
                 nodes: newNodes,
                 layerNodeIds: newLayerNodes,
                 rootNodeIds: newRootIds
             }
+        }, () => {
+            db.setNodes(Object.values(this.state.nodes));
+            db.setDiagram({
+                id: '',
+                title: '',
+                description: '',
+                rootNodes: this.state.rootNodeIds,
+                channels: this.state.channelOptions
+            })
         })
     }
 
@@ -164,7 +190,16 @@ class App extends React.Component<{}, State> {
 
         this.setState((state) => ({
             nodes: {...state.nodes, ...{[id]: newNode}}
-        }))
+        }), () => {
+            db.setNodes(Object.values(this.state.nodes));
+            db.setDiagram({
+                id: '',
+                title: '',
+                description: '',
+                rootNodes: this.state.rootNodeIds,
+                channels: this.state.channelOptions
+            })
+        })
     }
 
     goToParentLayer() {

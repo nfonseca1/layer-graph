@@ -54,7 +54,9 @@ module.exports = {
         contentBase: path.join(__dirname, 'dist'),
         proxy: {
             '/getDiagram': 'http://localhost:3000',
-            '/getNodes': 'http://localhost:3000'
+            '/getNodes': 'http://localhost:3000',
+            '/setNodes': 'http://localhost:3000',
+            '/setDiagram': 'http://localhost:3000'
         }
     },
     plugins: [

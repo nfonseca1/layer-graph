@@ -20,5 +20,15 @@ app.get("/getDiagram", (req, res) => {
     res.send(nodes);
 })
 
+app.post("/setNodes", (req, res) => {
+    fs.writeFileSync('./lib/nodes.json', JSON.stringify(req.body));
+    res.sendStatus(200);
+})
+
+app.post("/setDiagram", (req, res) => {
+    fs.writeFileSync('./lib/diagram.json', JSON.stringify(req.body));
+    res.sendStatus(200);
+})
+
 let PORT: number = parseInt(process.env.PORT);
 app.listen(PORT || 3000, process.env.IP, () => console.log("Server started"));
