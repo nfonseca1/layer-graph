@@ -1,10 +1,12 @@
 import * as React from 'react';
 import NodeList from './NodeList';
 import LayerView from './LayerView';
+import ColorList from './ColorList';
 import {INode, INodeUpdate} from './Node';
 import db from '../lib/database';
 import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { NONAME } from 'dns';
 
 export type INodes = {[key: string]: INode}
 
@@ -12,7 +14,15 @@ interface State {
     rootNodeIds: string[]
     nodes: INodes,
     layerNodeIds: string[],
-    layerParent: string
+    layerParent: string,
+    channels: number,
+    channelOptions: {
+        name: string,
+        numberId: number,
+        color: string
+    }[],
+    colorDropdown: boolean,
+    selectedChannel: number
 }
 
 enum Locked {
@@ -27,13 +37,11 @@ export interface IDiagram {
 	Tags: string[]
 	Locked: Locked,
 	rootNodes: string[],
-	channels: [
-		{
-			name: string,
-			numberId: number,
-			color: string
-		}
-	]
+	channels: {
+        name: string,
+        numberId: number,
+        color: string
+    }[]
 }
 
 class App extends React.Component<{}, State> {
@@ -44,7 +52,15 @@ class App extends React.Component<{}, State> {
             rootNodeIds: [],
             nodes: {},
             layerNodeIds: [],
-            layerParent: null
+            layerParent: null,
+            channels: 1,
+            channelOptions: [{
+                numberId: 1,
+                color: '#3a3a3a',
+                name: 'channel 1'
+            }],
+            colorDropdown: false,
+            selectedChannel: 1
         }
 
         this.addNode = this.addNode.bind(this);
@@ -53,6 +69,11 @@ class App extends React.Component<{}, State> {
         this.viewChildren = this.viewChildren.bind(this);
         this.updateNode = this.updateNode.bind(this);
         this.goToParentLayer = this.goToParentLayer.bind(this);
+        this.onChannelChange = this.onChannelChange.bind(this);
+        this.applyChannels = this.applyChannels.bind(this);
+        this.onChannelClick = this.onChannelClick.bind(this);
+        this.onColorClick = this.onColorClick.bind(this);
+        this.selectColor = this.selectColor.bind(this);
     }
 
     async componentDidMount(): Promise<void> {
@@ -70,7 +91,7 @@ class App extends React.Component<{}, State> {
         })
     }
 
-    addNode(content: string, comment: string): string {
+    addNode(content: string, comment: string, channel: number): string {
         let node: INode = {
             id: uuidv4(),
             parent: this.state.layerParent,
@@ -78,7 +99,7 @@ class App extends React.Component<{}, State> {
             content: content,
             comment: comment,
             subComment: '',
-            channel: 1
+            channel: channel
         }
 
         this.setState((state) => {
@@ -147,6 +168,7 @@ class App extends React.Component<{}, State> {
     }
 
     goToParentLayer() {
+        let currentLayerParent = this.state.layerParent;
         this.setState((state) => {
             let parent = state.nodes[state.nodes[state.layerParent].parent];
             let rootNodes = []
@@ -156,6 +178,84 @@ class App extends React.Component<{}, State> {
                 layerParent: state.nodes[state.layerParent].parent,
                 layerNodeIds: rootNodes
             }
+        })
+        return this.state.nodes[currentLayerParent];
+    }
+
+    onChannelClick(e: React.MouseEvent) {
+        (e.target as HTMLInputElement).select();
+    }
+
+    onChannelChange(e: React.ChangeEvent) {
+        let value = (e.target as HTMLInputElement).value;
+        if (value === '' || value === '0') {
+            this.setState({
+                channels: 1
+            })
+        }
+        else if (isNaN(parseInt(value)) === false && value.length <= 1) {
+            this.setState({
+                channels: parseInt(value)
+            })
+        }
+    }
+
+    applyChannels() {
+        let channelOptions = [];
+        for (let i = 0; i < this.state.channels; i++) {
+            let options = {
+                numberId: i + 1,
+                color: '#3a3a3a',
+                name: 'channel ' + (i + 1)
+            }
+            channelOptions.push(options);
+        }
+
+        this.setState({
+            channelOptions: channelOptions
+        })
+    }
+
+    onColorClick(e: React.MouseEvent, id: number) {
+        if (this.state.colorDropdown) {
+            this.closeColorDropdown();
+        }
+        else {
+            let colorList = document.querySelector("#colorListDropdown") as HTMLElement;
+            colorList.style.display = 'inline-block';
+            let x = (e.target as HTMLElement).getBoundingClientRect().x;
+            let y = (e.target as HTMLElement).getBoundingClientRect().y;
+            colorList.style.top = y.toString() + "px";
+            colorList.style.left = x.toString() + "px";
+        }
+
+        this.setState((state) => ({
+            colorDropdown: !state.colorDropdown,
+            selectedChannel: id
+        }))
+    }
+
+    closeColorDropdown() {
+        let colorList = document.querySelector("#colorListDropdown") as HTMLElement;
+        colorList.style.display = 'none';
+    }
+
+    selectColor(color: string) {
+        this.setState((state) => {
+            let channelOptions = [...state.channelOptions];
+            channelOptions = channelOptions.map(o => {
+                if (o.numberId === this.state.selectedChannel) {
+                    o.color = color;
+                    return o;
+                }
+                else return o;
+            })
+            return {
+                channelOptions: channelOptions,
+                colorDropdown: false
+            }
+        }, () => {
+            this.closeColorDropdown();
         })
     }
 
@@ -171,19 +271,50 @@ class App extends React.Component<{}, State> {
             currentParent = this.state.nodes[currentParent].parent;
         }
 
+        let channels = this.state.channelOptions.map(o => {
+            return (<div className="row" key={o.numberId}>
+                <label>{o.numberId}</label>
+                <div className="color" style={{backgroundColor: o.color}}
+                onClick={(e) => this.onColorClick(e, o.numberId)}></div>
+                <input type="text" />
+            </div>)
+        })
+
         return (
             <div className="App">
-                <input type="text" placeholder='Title' contentEditable/>
-                <p className="description" contentEditable></p>
+                <div className="header">
+                    <div className="left">
+                        <input type="text" placeholder='Title' contentEditable/>
+                        <p className="description" contentEditable></p>
+                    </div>
+                    <div className="right">
+                        <div className="channelOptions">
+                            <div>
+                                <label>Channels: </label>
+                                <input type="text" 
+                                onChange={this.onChannelChange}
+                                onBlur={this.applyChannels}
+                                value={this.state.channels}
+                                onClick={this.onChannelClick}/>
+                            </div>
+                            <div className="list">
+                                {channels}
+                            </div>
+                            <ColorList selectColor={this.selectColor}/>
+                        </div>
+                    </div>
+                </div>
                 <div className="diagram">
-                    <LayerView nodes={nodeHierarchy.reverse()} />
+                    <LayerView nodes={nodeHierarchy.reverse()}
+                    channelOptions={this.state.channelOptions} />
                     <NodeList nodes={layerNodes} 
                     parent={this.state.nodes[this.state.layerParent]} 
                     addNode={this.addNode} 
                     removeNode={this.removeNode} 
                     viewChildren={this.viewChildren}
                     updateNode={this.updateNode}
-                    goToParentLayer={this.goToParentLayer} />
+                    goToParentLayer={this.goToParentLayer}
+                    channelOptions={this.state.channelOptions} />
                 </div>
             </div>
         )

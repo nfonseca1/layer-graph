@@ -2,6 +2,7 @@
 @import 'NodeList';
 @import 'LayerView';
 @import 'utils';
+@import 'colors';
 
 * {
     box-sizing: border-box;
@@ -15,6 +16,83 @@ body {
     padding: 2vh 4vw;
     font-family: Arial, Helvetica, sans-serif;
     color: $text-color;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+
+        .left {
+            width: 80%;
+        }
+        .right {
+            width: 18%;
+            border-left: 1px solid lighten($bg-color, 5%);
+            padding: .5em 1em;
+            height: 11vh;
+
+            .channelOptions {
+                display: inline-flex;
+                flex-direction: column;
+                height: 100%;
+            }
+
+            input {
+                margin-left: .5em;
+                width: 2em;
+                background-color: lighten($bg-color, 2%);
+                height: 2em;
+                padding: 0;
+                text-align: center;
+                font-size: .9em;
+                &:focus {
+                    outline: none;
+                }
+            }
+
+            .list {
+                overflow-y: scroll;
+                &::-webkit-scrollbar {
+                    display: none;
+                }
+
+                .row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: .25em;
+                    border-top: 1px solid lighten($bg-color, 5%);
+                    padding: .25em 0;
+    
+                    .color {
+                        position: relative;
+                        display: inline-block;
+                        width: 2em;
+                        height: 1.5em;
+                        border: 1px solid #f0f0f0;
+                    }
+
+                    input {
+                        width: 3.75em;
+                        margin: 0;
+                        height: 1.5em;
+                    }
+                }
+            }
+
+            #colorListDropdown {
+                position: absolute;
+                width: 2em;
+                border: 1px solid #f0f0f0;
+
+                div {
+                    display: block;
+                    position: static;
+                    width: 2em;
+                    height: 1.5em;
+                }
+            }
+        }
+    }
 
     input {
         font-size: 1.8em;

@@ -4,11 +4,16 @@ import Node, {INode, INodeUpdate} from './Node';
 interface Props {
     nodes: INode[],
     parent: INode,
-    addNode: (content: string, comment: string) => string,
+    addNode: (content: string, comment: string, channel: number) => string,
     removeNode: (id: string) => void,
     viewChildren: (id: string) => void,
     updateNode: (id: string, updates: INodeUpdate) => void,
-    goToParentLayer: () => void
+    goToParentLayer: () => INode,
+    channelOptions: {
+        name: string,
+        numberId: number,
+        color: string
+    }[]
 }
 
 interface State {
@@ -16,7 +21,8 @@ interface State {
     comment: string,
     parentSubComment: string,
     parentId: string,
-    shiftKeyDown: boolean
+    shiftKeyDown: boolean,
+    channel: number
 }
 
 class NodeList extends React.Component<Props, State> {
@@ -28,7 +34,8 @@ class NodeList extends React.Component<Props, State> {
             comment: '',
             parentSubComment: this.props.parent?.subComment || '',
             parentId: this.props.parent?.id,
-            shiftKeyDown: false
+            shiftKeyDown: false,
+            channel: 1
         }
 
         this.addNode = this.addNode.bind(this);
@@ -41,10 +48,11 @@ class NodeList extends React.Component<Props, State> {
         this.onSubCommentBlur = this.onSubCommentBlur.bind(this);
         this.goToParentLayer = this.goToParentLayer.bind(this);
         this.onKeyUp = this.onKeyUp.bind(this);
+        this.onChannelChange = this.onChannelChange.bind(this);
     }
 
     addNode(): string {
-        return this.props.addNode(this.state.input, this.state.comment);
+        return this.props.addNode(this.state.input, this.state.comment, this.state.channel);
     }
 
     onInputChange(e: React.ChangeEvent) {
@@ -99,6 +107,13 @@ class NodeList extends React.Component<Props, State> {
     }
 
     viewChildren(id: string) {
+        this.setState((state) => {
+            let newChannel = state.channel + 1;
+            if (state.channel >= this.props.channelOptions.length) newChannel = 1;
+            return {
+                channel: newChannel
+            }
+        })
         this.props.viewChildren(id);
     }
 
@@ -112,8 +127,29 @@ class NodeList extends React.Component<Props, State> {
         this.props.updateNode(this.props.parent.id, {subComment: this.state.parentSubComment});
     }
 
+    onChannelFocus(e: React.FocusEvent) {
+        (e.target as HTMLInputElement).select();
+    }
+
+    onChannelChange(e: React.ChangeEvent) {
+        let value = (e.target as HTMLInputElement).value;
+        if (value === '' || value === '0') {
+            this.setState({
+                channel: 1
+            })
+        }
+        else if (isNaN(parseInt(value)) === false && value.length <= 1) {
+            this.setState({
+                channel: parseInt(value)
+            })
+        }
+    }
+
     goToParentLayer() {
-        this.props.goToParentLayer();
+        let parent = this.props.goToParentLayer();
+        this.setState({
+            channel: parent.channel
+        })
     }
     
     componentDidUpdate(): void {
@@ -140,7 +176,8 @@ class NodeList extends React.Component<Props, State> {
                 removeNode={this.removeNode}
                 key={n.id}
                 viewChildren={this.viewChildren}
-                updateNode={this.props.updateNode} />
+                updateNode={this.props.updateNode}
+                channelOptions={this.props.channelOptions} />
             )
         })
 
@@ -183,6 +220,12 @@ class NodeList extends React.Component<Props, State> {
                         onKeyUp={this.onKeyUp}
                         placeholder="Comment" 
                         tabIndex={2}/>
+                        <input id="channelInput" type="text" value={this.state.channel}
+                        onChange={this.onChannelChange}
+                        onKeyDown={this.onKeyDown}
+                        onFocus={this.onChannelFocus}
+                        placeholder="#"
+                        tabIndex={3}/>
                     </div>
                 </div>
             </div>

@@ -76,4 +76,10 @@
         @extend .input;
         margin-top: 5px;
     }
+
+    #channelInput {
+        width: 15%;
+        margin-left: 5px;
+        text-align: center;
+    }
 }

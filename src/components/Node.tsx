@@ -24,7 +24,12 @@ export interface INodeUpdate {
 interface Props extends INode {
     removeNode: (id: string) => void,
     viewChildren: (id: string) => void,
-    updateNode: (id: string, updates: INodeUpdate) => void
+    updateNode: (id: string, updates: INodeUpdate) => void,
+    channelOptions: {
+        name: string,
+        numberId: number,
+        color: string
+    }[]
 }
 
 interface State {
@@ -111,8 +116,12 @@ class Node extends React.Component<Props, State> {
             content = <p onClick={this.viewChildren}>{this.state.content}</p>
         }
 
+        let channelColor = this.props.channelOptions.find(opt => {
+            return opt.numberId === this.props.channel;
+        })?.color;
+
         return (
-            <div className="Node">
+            <div className={"Node color" + channelColor?.slice(1)}>
                 {content}
                 <textarea className='commentBubble' value={this.state.comment} 
                 onChange={this.onCommentChange}

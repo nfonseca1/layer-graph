@@ -2,7 +2,12 @@ import * as React from 'react';
 import {INode} from './Node';
 
 interface Props {
-    nodes: INode[]
+    nodes: INode[],
+    channelOptions: {
+        name: string,
+        numberId: number,
+        color: string
+    }[]
 }
 
 interface State {
@@ -20,8 +25,13 @@ class LayerView extends React.Component<Props, State> {
 
     render() {
         let nodes = this.props.nodes?.map(n => {
+
+            let channelColor = this.props.channelOptions.find(opt => {
+                return opt.numberId === n.channel;
+            })?.color;
+
             return (
-            <div className='node' key={n.id}>
+            <div className={"node color" + channelColor?.slice(1)} key={n.id}>
                 {n.content}
                 <div className='comment'>{n.comment}</div>
                 <div className='subComment'>{n.subComment}</div>
