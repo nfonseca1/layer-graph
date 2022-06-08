@@ -1,4 +1,4 @@
-import {INodes} from '../components/App';
+import {INodes} from '../components/Diagram';
 
 export function deleteNodes(nodes: INodes, nodeIds: string[]) {
     for (let id of nodeIds) {

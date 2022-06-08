@@ -1,5 +1,7 @@
 import {DynamoDB, S3, Credentials} from 'aws-sdk';
-import {IDiagram, INode} from './types';
+import {IDiagram, INode, User, Status, DbResults, GetUserStatus, AddUserStatus, IDiagramPreview} from './types';
+import bcrypt from 'bcrypt';
+import {v4 as uuidv4} from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -21,16 +23,9 @@ let s3 = new S3({
     credentials: credentials
 })
 
-// Result type
-interface DbResults {
-    success: boolean,
-    data?: any,
-    error?: any
-}
-
 // DynamoDB Functions
 
-function getDiagram(userId: string, diagramId: string): Promise<DbResults> {
+function getDiagram(userId: string, diagramId: string): Promise<DbResults<Status, IDiagram>> {
     let params: DynamoDB.DocumentClient.GetItemInput = {
         TableName: 'LayerGraph_Trees',
         Key: {
@@ -43,23 +38,26 @@ function getDiagram(userId: string, diagramId: string): Promise<DbResults> {
     .then(data => {
         console.log(`Successfully retrieved diagram with id: ${diagramId}`);
         return {
-            success: true,
-            data: data.Item
+            status: Status.Success,
+            data: data.Item as IDiagram
         }
     })
     .catch(e => {
         console.error(`Failed to retrieve diagram with id: ${diagramId} \n`, e);
         return {
-            success: false,
+            status: Status.Failed,
             error: e
         }
     })
 }
 
-function getDiagramsForUser(userId: string): Promise<DbResults> {
+function getDiagramsForUser(userId: string): Promise<DbResults<Status, IDiagramPreview[]>> {
     let params: DynamoDB.DocumentClient.QueryInput = {
         TableName: 'LayerGraph_Trees',
-        KeyConditionExpression: 'userId = ' + userId,
+        KeyConditionExpression: 'userId = :userid',
+        ExpressionAttributeValues: {
+            ':userid': userId
+        },
         ProjectionExpression: 'id, title, description, tags, locked'
     }
 
@@ -67,20 +65,20 @@ function getDiagramsForUser(userId: string): Promise<DbResults> {
     .then(data => {
         console.log(`Successfully queried diagram for user: ${userId}`);
         return {
-            success: true,
-            data: data.Items
+            status: Status.Success,
+            data: data.Items as IDiagramPreview[]
         }
     })
     .catch(e => {
         console.error(`Failed to query diagram for user: ${userId} \n`, e);
         return {
-            success: false,
+            status: Status.Failed,
             error: e
         }
     })
 }
 
-function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults> {
+function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status, {}>> {
     let params: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'LayerGraph_Trees',
         Item: {
@@ -92,14 +90,103 @@ function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults> {
     .then(data => {
         console.log(`Successfully added/updated diagram with id: ${diagram.id}`);
         return {
-            success: true,
+            status: Status.Success,
             data: null
         }
     })
     .catch(e => {
         console.error(`Failed to add/update diagram with id: ${diagram.id} \n`, e);
         return {
-            success: false,
+            status: Status.Failed,
+            error: e
+        }
+    })
+}
+
+function getUser(username: string): Promise<DbResults<GetUserStatus, User>> {
+    let params: DynamoDB.DocumentClient.GetItemInput = {
+        TableName: 'LayerGraph_Users',
+        Key: {
+            username: username
+        }
+    }
+
+    return dbClient.get(params).promise()
+    .then(data => {
+        if (data.Item) {
+            console.log(`Successfully retrieved user: ${username}`);
+            return {
+                status: GetUserStatus.Success,
+                data: data.Item as User
+            }
+        }
+        else {
+            console.log(`No user found for username: ${username}`);
+            return {
+                status: GetUserStatus.UsernameNotFound,
+                data: null
+            }
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to retrieve user: ${username} \n`, e);
+        return {
+            status: GetUserStatus.Failed,
+            error: e
+        }
+    })
+}
+
+/**
+ * Checks for an existing username and, if non-existent, creates a new user. Password will be hashed before added.
+ * @param username Username to be created
+ * @param password Plaintext password
+ * @returns Promise of Database Results object
+ */
+async function addUser(username: string, password: string): Promise<DbResults<AddUserStatus, User>> {
+    // Check if user already exists
+    let getUserResults = await getUser(username);
+    
+    if (getUserResults.status === GetUserStatus.Success) {
+        return {
+            status: AddUserStatus.UsernameExists, 
+            data: null
+        }
+    }
+    else if (getUserResults.status === GetUserStatus.Failed) {
+        return {
+            status: AddUserStatus.Failed,
+            error: getUserResults.error
+        }
+    }
+
+    // Hash password
+    let hash = await bcrypt.hash(password, 10);
+
+    // Populate db params
+    let uuid = uuidv4();
+    let params: DynamoDB.DocumentClient.PutItemInput = {
+        TableName: 'LayerGraph_Users',
+        Item: {
+            username: username,
+            passwordHash: hash,
+            id: uuid
+        }
+    }
+
+    // Add new user
+    return dbClient.put(params).promise()
+    .then(data => {
+        console.log(`Successfully retrieved user: ${username}`);
+        return {
+            status: AddUserStatus.Success,
+            data: {username: username, id: uuid} as User
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to add new user: ${username} \n`, e);
+        return {
+            status: AddUserStatus.Failed,
             error: e
         }
     })
@@ -107,7 +194,7 @@ function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults> {
 
 // S3 Functions
 
-function getNodes(diagramId: string): Promise<DbResults> {
+function getNodes(diagramId: string): Promise<DbResults<Status, string>> {
     let params: S3.GetObjectRequest = {
         Bucket: process.env.BUCKET,
         Key: `nodes_${diagramId}.json`
@@ -117,20 +204,20 @@ function getNodes(diagramId: string): Promise<DbResults> {
     .then(data => {
         console.log(`Successfully retrieved nodes for diagram: ${diagramId}`);
         return {
-            success: true,
+            status: Status.Success,
             data: data.Body.toString()
         }
     })
     .catch(e => {
         console.error(`Failed to retrieve nodes for diagram: ${diagramId} \n`, e);
         return {
-            success: false,
+            status: Status.Failed,
             error: e
         }
     })
 }
 
-function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults> {
+function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, {}>> {
     let params: S3.PutObjectRequest = {
         Bucket: process.env.BUCKET,
         Key: `nodes_${diagramId}.json`,
@@ -141,18 +228,25 @@ function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults> {
     .then(data => {
         console.log(`Successfully added/updated nodes for diagram: ${diagramId}`);
         return {
-            success: true,
+            status: Status.Success,
             data: null
         }
     })
     .catch(e => {
         console.error(`Failed to add/update nodes for diagram: ${diagramId} \n`, e);
         return {
-            success: false,
+            status: Status.Failed,
             error: e
         }
     })
 }
 
 // Exports
-export default {getDiagram, getDiagramsForUser, setDiagram, getNodes, setNodes}
+export default {
+    getDiagram, 
+    getDiagramsForUser, 
+    setDiagram, getNodes, 
+    setNodes,
+    getUser,
+    addUser
+}

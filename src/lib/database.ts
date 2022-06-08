@@ -1,29 +1,29 @@
 import {INode} from '../components/Node';
-import {IDiagram} from '../components/App';
+import {IDiagram} from '../components/Diagram';
+import {IDiagramPreview} from '../components/Home';
+import {DbResults, Status, GetUserStatus, AddUserStatus, LoginStatus} from './types';
+import { response } from 'express';
 
-export function getNodes(id: string): Promise<INode[]> {
+// Read Functions
+
+export function getNodes(id: string): Promise<DbResults<Status, INode[]>> {
     return fetch('/getNodes?diagramId=' + id)
-    .then(response => {
-        return response.json();
-    })
-    .then(results => {
-        return results;
-    })
-    .catch(e => console.error(e));
+    .then(response => response.json())
 }
 
-export function getDiagram(id: string): Promise<IDiagram> {
+export function getDiagram(id: string): Promise<DbResults<Status, IDiagram>> {
     return fetch('/getDiagram?diagramId=' + id)
-    .then(response => {
-        return response.json();
-    })
-    .then(results => {
-        return results;
-    })
-    .catch(e => console.error(e));
+    .then(response => response.json())
 }
 
-export function setNodes(nodes: INode[]): Promise<void | Response> {
+export function getDiagramsForUser(): Promise<DbResults<Status, IDiagramPreview[]>> {
+    return fetch('/getDiagramsForUser')
+    .then(response => response.json())
+} 
+
+// Write Functions
+
+export function setNodes(nodes: INode[]): Promise<DbResults<Status, {}>> {
     return fetch('/setNodes', {
         method: 'POST',
         headers: {
@@ -34,10 +34,11 @@ export function setNodes(nodes: INode[]): Promise<void | Response> {
             diagramId: '12345'
         })
     })
+    .then(response => response.json())
     .catch(e => console.error(e));
 }
 
-export function setDiagram(diagram: IDiagram): Promise<void | Response> {
+export function setDiagram(diagram: IDiagram): Promise<DbResults<Status, {}>> {
     return fetch('/setDiagram', {
         method: 'POST',
         headers: {
@@ -48,7 +49,48 @@ export function setDiagram(diagram: IDiagram): Promise<void | Response> {
             diagramId: '12345'
         })
     })
+    .then(response => response.json())
     .catch(e => console.error(e));
 }
 
-export default {getNodes, getDiagram, setNodes, setDiagram}
+export function login(username: string, password: string): Promise<DbResults<LoginStatus, {}>> {
+    return fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username,
+            password
+        })
+    })
+    .then(response => response.json())
+    .then((results: DbResults<LoginStatus, {}>) => {
+        return results;
+    })
+}
+
+export function signup(username: string, password: string): Promise<DbResults<AddUserStatus, {}>> {
+    return fetch('/signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username,
+            password
+        })
+    })
+    .then(response => response.json())
+    .catch(e => console.error(e));
+}
+
+export default {
+    getNodes, 
+    getDiagram, 
+    getDiagramsForUser, 
+    setNodes, 
+    setDiagram,
+    login,
+    signup
+}

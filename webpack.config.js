@@ -56,7 +56,9 @@ module.exports = {
             '/getDiagram': 'http://localhost:3000',
             '/getNodes': 'http://localhost:3000',
             '/setNodes': 'http://localhost:3000',
-            '/setDiagram': 'http://localhost:3000'
+            '/setDiagram': 'http://localhost:3000',
+            '/login': 'http://localhost:3000',
+            '/signup': 'http://localhost:3000'
         }
     },
     plugins: [
