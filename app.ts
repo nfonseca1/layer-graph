@@ -87,13 +87,17 @@ app.post("/setNodes", (req, res) => {
 })
 
 app.post("/setDiagram", (req: IRequest, res, ) => {
-    let userId = req.session.userId;
-    if (!userId) res.send({success: false});
+    let userId = req.session.user?.id;
+    if (!userId) {
+        res.send({status: Status.Failed});
+        return;
+    }
 
     db.setDiagram(userId, req.body.diagram)
     .then(results => {
         res.send({
-            status: results.status
+            status: results.status,
+            data: results.data
         })
     })
 })

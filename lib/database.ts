@@ -78,10 +78,13 @@ function getDiagramsForUser(userId: string): Promise<DbResults<Status, IDiagramP
     })
 }
 
-function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status, {}>> {
+function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status, string>> {
+    let uuid = uuidv4(); 
     let params: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'LayerGraph_Trees',
         Item: {
+            userId: userId,
+            id: uuid,
             ...diagram 
         }
     }
@@ -91,7 +94,7 @@ function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status
         console.log(`Successfully added/updated diagram with id: ${diagram.id}`);
         return {
             status: Status.Success,
-            data: null
+            data: uuid
         }
     })
     .catch(e => {

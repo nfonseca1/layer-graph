@@ -46,7 +46,7 @@ class Home extends React.Component<Props, State> {
     }
 
     onCreateNew() {
-        let diagramCreated = db.setDiagram({
+        let newDiagram = {
             id: uuidv4(),
             title: 'New Diagram',
             description: '',
@@ -54,21 +54,36 @@ class Home extends React.Component<Props, State> {
             locked: Locked.Unlocked,
             channels: [],
             rootNodes: []
-        })
+        }
+        let diagramCreated = db.setDiagram(newDiagram);
         let nodesCreated = db.setNodes([]);
 
         Promise.all([diagramCreated, nodesCreated])
-        .then()
+        .then(([diagram, nodes]) => {
+            newDiagram.id = diagram.data;
+            this.setState((state) => ({
+                diagrams: [...state.diagrams, newDiagram]
+            }))
+        })
     }
 
     render() {
+        let previews = this.state.diagrams.map(d => {
+            return (
+                <div className='preview'>
+                    <h2>{d.title}</h2>
+                    <p>{d.description}</p>
+                </div>
+            )
+        })
+
         return (
             <div className='Home'>
                 <div className='header'>
                     <button onClick={this.onCreateNew}>Create New</button>
                 </div>
                 <div className='diagrams'>
-
+                    {previews}
                 </div>
             </div>
         )

@@ -38,15 +38,14 @@ export function setNodes(nodes: INode[]): Promise<DbResults<Status, {}>> {
     .catch(e => console.error(e));
 }
 
-export function setDiagram(diagram: IDiagram): Promise<DbResults<Status, {}>> {
+export function setDiagram(diagram: IDiagram): Promise<DbResults<Status, string>> {
     return fetch('/setDiagram', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            diagram: diagram,
-            diagramId: '12345'
+            diagram: diagram
         })
     })
     .then(response => response.json())
