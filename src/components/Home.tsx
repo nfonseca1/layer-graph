@@ -5,7 +5,7 @@ import {Locked} from './Diagram';
 import { Status } from '../lib/types';
 
 interface Props {
-
+    openDiagram: (id: string) => void
 }
 
 export interface IDiagramPreview {
@@ -55,11 +55,8 @@ class Home extends React.Component<Props, State> {
             channels: [],
             rootNodes: []
         }
-        let diagramCreated = db.setDiagram(newDiagram);
-        let nodesCreated = db.setNodes([]);
-
-        Promise.all([diagramCreated, nodesCreated])
-        .then(([diagram, nodes]) => {
+        db.setDiagram(newDiagram)
+        .then(diagram => {
             newDiagram.id = diagram.data;
             this.setState((state) => ({
                 diagrams: [...state.diagrams, newDiagram]
@@ -70,7 +67,7 @@ class Home extends React.Component<Props, State> {
     render() {
         let previews = this.state.diagrams.map(d => {
             return (
-                <div className='preview'>
+                <div className='preview' key={d.id} onClick={() => this.props.openDiagram(d.id)}>
                     <h2>{d.title}</h2>
                     <p>{d.description}</p>
                 </div>

@@ -83,18 +83,48 @@ function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status
     let params: DynamoDB.DocumentClient.PutItemInput = {
         TableName: 'LayerGraph_Trees',
         Item: {
+            ...diagram,
             userId: userId,
-            id: uuid,
-            ...diagram 
+            id: uuid
         }
     }
 
     return dbClient.put(params).promise()
     .then(data => {
-        console.log(`Successfully added/updated diagram with id: ${diagram.id}`);
+        return setNodes(uuid, []);
+    })
+    .then(data => {
+        console.log(`Successfully added diagram with id: ${uuid}`);
         return {
             status: Status.Success,
             data: uuid
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to add diagram with id: ${uuid} \n`, e);
+        return {
+            status: Status.Failed,
+            error: e
+        }
+    })
+}
+
+function updateDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status, string>> {
+    let params: DynamoDB.DocumentClient.PutItemInput = {
+        TableName: 'LayerGraph_Trees',
+        Item: {
+            ...diagram,
+            userId: userId,
+            id: diagram.id
+        }
+    }
+
+    return dbClient.put(params).promise()
+    .then(data => {
+        console.log(`Successfully updated diagram with id: ${diagram.id}`);
+        return {
+            status: Status.Success,
+            data: diagram.id
         }
     })
     .catch(e => {
@@ -220,7 +250,7 @@ function getNodes(diagramId: string): Promise<DbResults<Status, string>> {
     })
 }
 
-function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, {}>> {
+function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, string>> {
     let params: S3.PutObjectRequest = {
         Bucket: process.env.BUCKET,
         Key: `nodes_${diagramId}.json`,
@@ -232,7 +262,7 @@ function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, 
         console.log(`Successfully added/updated nodes for diagram: ${diagramId}`);
         return {
             status: Status.Success,
-            data: null
+            data: diagramId
         }
     })
     .catch(e => {
@@ -248,7 +278,9 @@ function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, 
 export default {
     getDiagram, 
     getDiagramsForUser, 
-    setDiagram, getNodes, 
+    setDiagram, 
+    updateDiagram,
+    getNodes, 
     setNodes,
     getUser,
     addUser

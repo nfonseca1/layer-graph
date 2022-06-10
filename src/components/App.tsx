@@ -14,7 +14,8 @@ enum Pages {
 }
 
 interface State {
-    page: Pages
+    page: Pages,
+    selectedDiagram: string
 }
 
 class App extends React.Component<Props, State> {
@@ -22,15 +23,24 @@ class App extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            page: Pages.Login
+            page: Pages.Login,
+            selectedDiagram: null
         }
 
         this.goToHomePage = this.goToHomePage.bind(this);
+        this.openDiagram = this.openDiagram.bind(this);
     }
 
     goToHomePage() {
         this.setState({
             page: Pages.Home
+        })
+    }
+
+    openDiagram(id: string) {
+        this.setState({
+            page: Pages.Diagram,
+            selectedDiagram: id
         })
     }
 
@@ -40,10 +50,10 @@ class App extends React.Component<Props, State> {
             page = <Login goToHomePage={this.goToHomePage} />
         }
         else if (this.state.page === Pages.Home) {
-            page = <Home />
+            page = <Home openDiagram={this.openDiagram} />
         }
         else if (this.state.page === Pages.Diagram) {
-            page = <Diagram />
+            page = <Diagram id={this.state.selectedDiagram} />
         }
 
         return (

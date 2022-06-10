@@ -7,10 +7,17 @@ import db from '../lib/database';
 import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { Status } from '../lib/types';
+import { stringify } from 'querystring';
+
+interface Props {
+    id: string
+}
 
 export type INodes = {[key: string]: INode}
 
 interface State {
+    title: string,
+    description: string,
     rootNodeIds: string[]
     nodes: INodes,
     layerNodeIds: string[],
@@ -44,11 +51,13 @@ export interface IDiagram {
     }[]
 }
 
-class Diagram extends React.Component<{}, State> {
-    constructor(props: {}) {
+class Diagram extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
 
         this.state = {
+            title: '',
+            description: '',
             rootNodeIds: [],
             nodes: {},
             layerNodeIds: [],
@@ -74,11 +83,14 @@ class Diagram extends React.Component<{}, State> {
         this.onChannelClick = this.onChannelClick.bind(this);
         this.onColorClick = this.onColorClick.bind(this);
         this.selectColor = this.selectColor.bind(this);
+        this.updateDiagram = this.updateDiagram.bind(this);
+        this.onTitleChange = this.onTitleChange.bind(this);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
     }
 
     async componentDidMount(): Promise<void> {
-        let diagram = await db.getDiagram('');
-        let nodes = await db.getNodes('');
+        let diagram = await db.getDiagram(this.props.id);
+        let nodes = await db.getNodes(this.props.id);
 
         let nodesObj: INodes = {};
         for (let node of nodes.data) {
@@ -123,8 +135,8 @@ class Diagram extends React.Component<{}, State> {
                 layerNodeIds: newLayerNodeIds
             }
         }, () => {
-            db.setNodes(Object.values(this.state.nodes));
-            db.setDiagram({
+            db.setNodes(this.props.id, Object.values(this.state.nodes));
+            db.updateDiagram({
                 id: '',
                 title: '',
                 description: '',
@@ -165,8 +177,8 @@ class Diagram extends React.Component<{}, State> {
                 rootNodeIds: newRootIds
             }
         }, () => {
-            db.setNodes(Object.values(this.state.nodes));
-            db.setDiagram({
+            db.setNodes(this.props.id, Object.values(this.state.nodes));
+            db.updateDiagram({
                 id: '',
                 title: '',
                 description: '',
@@ -192,8 +204,8 @@ class Diagram extends React.Component<{}, State> {
         this.setState((state) => ({
             nodes: {...state.nodes, ...{[id]: newNode}}
         }), () => {
-            db.setNodes(Object.values(this.state.nodes));
-            db.setDiagram({
+            db.setNodes(this.props.id, Object.values(this.state.nodes));
+            db.updateDiagram({
                 id: '',
                 title: '',
                 description: '',
@@ -295,6 +307,28 @@ class Diagram extends React.Component<{}, State> {
         })
     }
 
+    updateDiagram() {
+        db.updateDiagram({
+            id: this.props.id,
+            title: this.state.title,
+            description: this.state.description,
+            rootNodes: this.state.rootNodeIds,
+            channels: this.state.channelOptions
+        })
+    }
+
+    onTitleChange(e: React.ChangeEvent) {
+        this.setState({
+            title: (e.target as HTMLInputElement).value
+        })
+    }
+
+    onDescriptionChange(e: React.ChangeEvent) {
+        this.setState({
+            description: (e.target as HTMLInputElement).value
+        })
+    }
+
     render() {
         let layerNodes: INode[] = this.state.layerNodeIds.map(id => {
             return this.state.nodes[id];
@@ -317,11 +351,11 @@ class Diagram extends React.Component<{}, State> {
         })
 
         return (
-            <div className="App">
+            <div className="Diagram">
                 <div className="header">
                     <div className="left">
-                        <input type="text" placeholder='Title' contentEditable/>
-                        <p className="description" contentEditable></p>
+                        <input type="text" placeholder='Title' value={this.state.title} onChange={this.onTitleChange} onBlur={this.updateDiagram} />
+                        <input className="description" value={this.state.description} onChange={this.onDescriptionChange} onBlur={this.updateDiagram}/>
                     </div>
                     <div className="right">
                         <div className="channelOptions">
@@ -340,7 +374,7 @@ class Diagram extends React.Component<{}, State> {
                         </div>
                     </div>
                 </div>
-                <div className="diagram">
+                <div className="view">
                     <LayerView nodes={nodeHierarchy.reverse()}
                     channelOptions={this.state.channelOptions} />
                     <NodeList nodes={layerNodes} 

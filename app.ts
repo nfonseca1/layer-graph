@@ -102,6 +102,22 @@ app.post("/setDiagram", (req: IRequest, res, ) => {
     })
 })
 
+app.post("/updateDiagram", (req: IRequest, res, ) => {
+    let userId = req.session.user?.id;
+    if (!userId) {
+        res.send({status: Status.Failed});
+        return;
+    }
+
+    db.updateDiagram(userId, req.body.diagram)
+    .then(results => {
+        res.send({
+            status: results.status,
+            data: results.data
+        })
+    })
+})
+
 app.post("/login", async (req: IRequest, res) => {
     let username = req.body.username;
     let password = req.body.password;

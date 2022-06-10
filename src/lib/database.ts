@@ -23,7 +23,7 @@ export function getDiagramsForUser(): Promise<DbResults<Status, IDiagramPreview[
 
 // Write Functions
 
-export function setNodes(nodes: INode[]): Promise<DbResults<Status, {}>> {
+export function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, {}>> {
     return fetch('/setNodes', {
         method: 'POST',
         headers: {
@@ -31,7 +31,7 @@ export function setNodes(nodes: INode[]): Promise<DbResults<Status, {}>> {
         },
         body: JSON.stringify({
             nodes: nodes,
-            diagramId: '12345'
+            diagramId: diagramId
         })
     })
     .then(response => response.json())
@@ -40,6 +40,20 @@ export function setNodes(nodes: INode[]): Promise<DbResults<Status, {}>> {
 
 export function setDiagram(diagram: IDiagram): Promise<DbResults<Status, string>> {
     return fetch('/setDiagram', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            diagram: diagram
+        })
+    })
+    .then(response => response.json())
+    .catch(e => console.error(e));
+}
+
+export function updateDiagram(diagram: IDiagram): Promise<DbResults<Status, string>> {
+    return fetch('/updateDiagram', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -90,6 +104,7 @@ export default {
     getDiagramsForUser, 
     setNodes, 
     setDiagram,
+    updateDiagram,
     login,
     signup
 }
