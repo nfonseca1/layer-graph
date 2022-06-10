@@ -99,6 +99,8 @@ class Diagram extends React.Component<Props, State> {
 
         if (diagram.status === Status.Failed || nodes.status === Status.Failed) return;
         this.setState({
+            title: diagram.data.title,
+            description: diagram.data.title,
             rootNodeIds: diagram.data.rootNodes || [],
             nodes: nodesObj,
             layerNodeIds: diagram.data.rootNodes || [],
@@ -354,7 +356,7 @@ class Diagram extends React.Component<Props, State> {
             <div className="Diagram">
                 <div className="header">
                     <div className="left">
-                        <input type="text" placeholder='Title' value={this.state.title} onChange={this.onTitleChange} onBlur={this.updateDiagram} />
+                        <input className="title" type="text" placeholder='Title' value={this.state.title} onChange={this.onTitleChange} onBlur={this.updateDiagram} />
                         <input className="description" value={this.state.description} onChange={this.onDescriptionChange} onBlur={this.updateDiagram}/>
                     </div>
                     <div className="right">

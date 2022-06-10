@@ -49,7 +49,7 @@ app.get("/getNodes", (req, res) => {
 })
 
 app.get("/getDiagram", (req: IRequest, res) => {
-    let userId = req.session.userId;
+    let userId = req.session.user?.id;
     if (!userId) {
         res.send({status: Status.Failed});
         return;
