@@ -9,6 +9,10 @@ import { response } from 'express';
 export function getNodes(id: string): Promise<DbResults<Status, INode[]>> {
     return fetch('/getNodes?diagramId=' + id)
     .then(response => response.json())
+    .then(results => {
+        results.data = JSON.parse(results.data);
+        return results;
+    })
 }
 
 export function getDiagram(id: string): Promise<DbResults<Status, IDiagram>> {

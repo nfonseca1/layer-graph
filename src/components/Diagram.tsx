@@ -100,7 +100,7 @@ class Diagram extends React.Component<Props, State> {
         if (diagram.status === Status.Failed || nodes.status === Status.Failed) return;
         this.setState({
             title: diagram.data.title,
-            description: diagram.data.title,
+            description: diagram.data.description,
             rootNodeIds: diagram.data.rootNodes || [],
             nodes: nodesObj,
             layerNodeIds: diagram.data.rootNodes || [],
@@ -139,9 +139,9 @@ class Diagram extends React.Component<Props, State> {
         }, () => {
             db.setNodes(this.props.id, Object.values(this.state.nodes));
             db.updateDiagram({
-                id: '',
-                title: '',
-                description: '',
+                id: this.props.id,
+                title: this.state.title,
+                description: this.state.description,
                 rootNodes: this.state.rootNodeIds,
                 channels: this.state.channelOptions
             })
@@ -181,9 +181,9 @@ class Diagram extends React.Component<Props, State> {
         }, () => {
             db.setNodes(this.props.id, Object.values(this.state.nodes));
             db.updateDiagram({
-                id: '',
-                title: '',
-                description: '',
+                id: this.props.id,
+                title: this.state.title,
+                description: this.state.description,
                 rootNodes: this.state.rootNodeIds,
                 channels: this.state.channelOptions
             })
@@ -208,9 +208,9 @@ class Diagram extends React.Component<Props, State> {
         }), () => {
             db.setNodes(this.props.id, Object.values(this.state.nodes));
             db.updateDiagram({
-                id: '',
-                title: '',
-                description: '',
+                id: this.props.id,
+                title: this.state.title,
+                description: this.state.description,
                 rootNodes: this.state.rootNodeIds,
                 channels: this.state.channelOptions
             })
