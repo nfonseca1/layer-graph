@@ -86,6 +86,7 @@ class Diagram extends React.Component<Props, State> {
         this.updateDiagram = this.updateDiagram.bind(this);
         this.onTitleChange = this.onTitleChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onChannelNameChange = this.onChannelNameChange.bind(this);
     }
 
     async componentDidMount(): Promise<void> {
@@ -250,8 +251,27 @@ class Diagram extends React.Component<Props, State> {
         }
     }
 
+    onChannelNameChange(e: React.ChangeEvent, id: number) {
+        this.setState((state) => {
+            let newChannels = this.state.channelOptions;
+            newChannels = newChannels.map(c => {
+                if (c.numberId === id) return {
+                    ...c,
+                    name: (e.target as HTMLInputElement).value
+                }
+                else return c;
+            })
+            
+            return {
+                channelOptions: newChannels
+            }
+        })
+    }
+
     applyChannels() {
         let channelOptions = [];
+        if (this.state.channelOptions.length === this.state.channels) return;
+        
         for (let i = 0; i < this.state.channels; i++) {
             let options = {
                 numberId: i + 1,
@@ -263,6 +283,8 @@ class Diagram extends React.Component<Props, State> {
 
         this.setState({
             channelOptions: channelOptions
+        }, () => {
+            this.updateDiagram();
         })
     }
 
@@ -306,6 +328,7 @@ class Diagram extends React.Component<Props, State> {
             }
         }, () => {
             this.closeColorDropdown();
+            this.updateDiagram();
         })
     }
 
@@ -348,7 +371,9 @@ class Diagram extends React.Component<Props, State> {
                 <label>{o.numberId}</label>
                 <div className="color" style={{backgroundColor: o.color}}
                 onClick={(e) => this.onColorClick(e, o.numberId)}></div>
-                <input type="text" />
+                <input type="text" value={o.name} 
+                onChange={(e) => this.onChannelNameChange(e, o.numberId)}
+                onBlur={this.updateDiagram}/>
             </div>)
         })
 
