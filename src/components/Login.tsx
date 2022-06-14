@@ -14,6 +14,11 @@ interface State {
     signupPasswordConfirm: string
 }
 
+enum Form {
+    Login,
+    Signup
+}
+
 class Login extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -33,6 +38,10 @@ class Login extends React.Component<Props, State> {
         this.onSignupPasswordConfirmChange = this.onSignupPasswordConfirmChange.bind(this);
         this.submitLogin = this.submitLogin.bind(this);
         this.submitSignup = this.submitSignup.bind(this);
+    }
+
+    componentDidMount(): void {
+        (document.querySelector(".loginForm .username") as HTMLInputElement).focus();
     }
 
     onLoginUsernameChange(e: React.ChangeEvent) {
@@ -105,6 +114,15 @@ class Login extends React.Component<Props, State> {
         })
     }
 
+    onKeyDown(e: React.KeyboardEvent, form: Form) {
+        if (e.key === 'Enter' && form === Form.Login) {
+            this.submitLogin();
+        }
+        else if (e.key === 'Enter' && form === Form.Signup) {
+            this.submitSignup();
+        }
+    }
+
     render() {
         return (
             <div className='Login'>
@@ -112,23 +130,28 @@ class Login extends React.Component<Props, State> {
                     <h2>Login</h2>
                     <input className='username' type='text' 
                     placeholder='Username'
-                    onChange={this.onLoginUsernameChange} />
+                    onChange={this.onLoginUsernameChange} 
+                    onKeyDown={(e) => this.onKeyDown(e, Form.Login)}/>
                     <input className='password' type='password' 
                     placeholder='Password'
-                    onChange={this.onLoginPasswordChange} />
+                    onChange={this.onLoginPasswordChange} 
+                    onKeyDown={(e) => this.onKeyDown(e, Form.Login)}/>
                     <button className='confirmBtn' onClick={this.submitLogin}>Login</button>
                 </div>
                 <div className='signupForm'>
                     <h2>Sign Up</h2>
                     <input className='username' type='text' 
                     placeholder='Username'
-                    onChange={this.onSignupUsernameChange} />
+                    onChange={this.onSignupUsernameChange} 
+                    onKeyDown={(e) => this.onKeyDown(e, Form.Signup)}/>
                     <input className='password' type='password' 
                     placeholder='Password'
-                    onChange={this.onSignupPasswordChange} />
+                    onChange={this.onSignupPasswordChange} 
+                    onKeyDown={(e) => this.onKeyDown(e, Form.Signup)}/>
                     <input className='passwordConfirm' type='password' 
                     placeholder='Confirm Password'
-                    onChange={this.onSignupPasswordConfirmChange} />
+                    onChange={this.onSignupPasswordConfirmChange} 
+                    onKeyDown={(e) => this.onKeyDown(e, Form.Signup)}/>
                     <button className='confirmBtn' onClick={this.submitSignup}>Sign Up</button>
                 </div>
             </div>
