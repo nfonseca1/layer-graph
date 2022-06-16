@@ -43,6 +43,8 @@ class App extends React.Component<Props, State> {
         this.openDiagram = this.openDiagram.bind(this);
         this.addTag = this.addTag.bind(this);
         this.getDiagramsForTag = this.getDiagramsForTag.bind(this);
+        this.addTagForDiagram = this.addTagForDiagram.bind(this);
+        this.removeTagFromDiagram = this.removeTagFromDiagram.bind(this);
     }
 
     goToHomePage() {
@@ -80,6 +82,30 @@ class App extends React.Component<Props, State> {
         return diagrams;
     }
 
+    addTagForDiagram(name: string, id: string) {
+        this.setState((state) => {
+            let newTags = {...state.tags};
+            if (newTags[name]) {
+                newTags[name].diagrams[id] = true;
+            }
+            return {
+                tags: newTags
+            }
+        })
+    }
+
+    removeTagFromDiagram(name: string, id: string) {
+        this.setState((state) => {
+            let newTags = {...state.tags};
+            if (newTags[name]) {
+                delete newTags[name].diagrams[id];
+            }
+            return {
+                tags: newTags
+            }
+        })
+    }
+
     render() {
         let page: JSX.Element;
         if (this.state.page === Pages.Login) {
@@ -89,7 +115,9 @@ class App extends React.Component<Props, State> {
             page = <Home openDiagram={this.openDiagram} 
             addTag={this.addTag} 
             tags={this.state.tags} 
-            getDiagramsForTag={this.getDiagramsForTag}/>
+            getDiagramsForTag={this.getDiagramsForTag}
+            addTagForDiagram={this.addTagForDiagram}
+            removeTagFromDiagram={this.removeTagFromDiagram}/>
         }
         else if (this.state.page === Pages.Diagram) {
             page = <Diagram id={this.state.selectedDiagram} />

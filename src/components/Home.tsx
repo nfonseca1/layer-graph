@@ -11,6 +11,8 @@ interface Props {
     openDiagram: (id: string) => void,
     addTag: (name: string, status: LockedStatus) => void,
     getDiagramsForTag: (tags: string[]) => ({[id: string]: boolean}),
+    addTagForDiagram: (name: string, id: string) => void,
+    removeTagFromDiagram: (name: string, id: string) => void,
     tags: TagList
 }
 
@@ -25,6 +27,7 @@ export interface IDiagramPreview {
 interface State {
     diagrams: IDiagramPreview[],
     selectedDiagrams: {[id: string]: boolean},
+    diagramBeingEdited: string,
     editScreen: boolean,
     addNewTagScreen: boolean
 }
@@ -36,6 +39,7 @@ class Home extends React.Component<Props, State> {
         this.state = {
             diagrams: [],
             selectedDiagrams: null,
+            diagramBeingEdited: null,
             editScreen: false,
             addNewTagScreen: false
         }
@@ -81,10 +85,11 @@ class Home extends React.Component<Props, State> {
         })
     }
 
-    editDiagram(e: React.MouseEvent) {
+    editDiagram(e: React.MouseEvent, id: string) {
         e.stopPropagation();
         this.setState({
-            editScreen: true
+            editScreen: true,
+            diagramBeingEdited: id
         })
     }
 
@@ -121,7 +126,19 @@ class Home extends React.Component<Props, State> {
     render() {
         let editScreen: JSX.Element;
         if (this.state.editScreen) {
-            editScreen = <EditScreen clearEditScreen={this.clearEditScreen} />
+            let diagram = this.state.diagrams.find(d => d.id === this.state.diagramBeingEdited);
+            let tags = [];
+            for (const [key, value] of Object.entries(this.props.tags)) {
+                if (value.diagrams[this.state.diagramBeingEdited]) {
+                    tags.push(key);
+                }
+            }
+            editScreen = <EditScreen tags={Object.keys(this.props.tags)} 
+                            diagramTags={tags} 
+                            details={diagram} 
+                            clearEditScreen={this.clearEditScreen} 
+                            addTagForDiagram={this.props.addTagForDiagram}
+                            removeTagFromDiagram={this.props.removeTagFromDiagram}/>
         }
 
         let addNewTagScreen: JSX.Element;
@@ -136,7 +153,7 @@ class Home extends React.Component<Props, State> {
                     <div className='preview' key={d.id} onClick={() => this.props.openDiagram(d.id)}>
                         <h2>{d.title}</h2>
                         <p>{d.description}</p>
-                        <div className='edit' onClick={this.editDiagram}>E</div>
+                        <div className='edit' onClick={(e) => this.editDiagram(e, d.id)}>E</div>
                     </div>
                 )
             }

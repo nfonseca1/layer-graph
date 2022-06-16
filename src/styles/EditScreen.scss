@@ -27,5 +27,34 @@
         background-color: lighten($bg-color, 30%);
         border-radius: 4px;
         z-index: 5;
+        padding: 1em;
+
+        .tagList {
+            margin-top: 1em;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .assignedTag {
+            display: inline-block;
+            padding: 0.5em;
+            background-color: #164499;
+            color: white;
+            border-radius: 5px;
+            margin-right: 0.5em;
+            box-shadow: -2px 3px 8px 1px rgb(0 0 0 / 65%);
+
+            .name {
+                display: inline-block
+            }
+
+            .remove {
+                display: inline-block;
+                margin-left: 0.5em;
+                border-left: 1px solid #c0c0c0;
+                color: #c0c0c0;
+                padding-left: 0.5em;
+            }
+        }
     }
 }
