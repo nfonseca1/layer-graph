@@ -4,15 +4,18 @@ import {v4 as uuidv4} from 'uuid';
 import {Locked} from './Diagram';
 import { Status } from '../lib/types';
 import EditScreen from './EditScreen';
+import EditTagScreen from './EditTagScreen';
 import AddNewTag, {LockedStatus} from './AddNewTag';
 import {TagList} from './App';
 
 interface Props {
     openDiagram: (id: string) => void,
-    addTag: (name: string, status: LockedStatus) => void,
+    addTag: (name: string, status: LockedStatus) => boolean,
     getDiagramsForTag: (tags: string[]) => ({[id: string]: boolean}),
     addTagForDiagram: (name: string, id: string) => void,
     removeTagFromDiagram: (name: string, id: string) => void,
+    updateTag: (originalName: string, newName: string, lockedStatus: LockedStatus) => boolean,
+    deleteTag: (name: string) => void,
     tags: TagList
 }
 
@@ -29,7 +32,9 @@ interface State {
     selectedDiagrams: {[id: string]: boolean},
     diagramBeingEdited: string,
     editScreen: boolean,
-    addNewTagScreen: boolean
+    addNewTagScreen: boolean,
+    editTagScreen: boolean,
+    tagToEdit: string
 }
 
 class Home extends React.Component<Props, State> {
@@ -41,7 +46,9 @@ class Home extends React.Component<Props, State> {
             selectedDiagrams: null,
             diagramBeingEdited: null,
             editScreen: false,
-            addNewTagScreen: false
+            addNewTagScreen: false,
+            editTagScreen: false,
+            tagToEdit: null
         }
 
         this.onCreateNew = this.onCreateNew.bind(this);
@@ -50,6 +57,10 @@ class Home extends React.Component<Props, State> {
         this.showAddNewTag = this.showAddNewTag.bind(this);
         this.addTag = this.addTag.bind(this);
         this.clearAddNewTag = this.clearAddNewTag.bind(this);
+        this.editTag = this.editTag.bind(this);
+        this.clearEditTagScreen = this.clearEditTagScreen.bind(this);
+        this.updateTag = this.updateTag.bind(this);
+        this.deleteTag = this.deleteTag.bind(this);
     }
 
     componentDidMount(): void {
@@ -106,8 +117,13 @@ class Home extends React.Component<Props, State> {
     }
 
     addTag(name: string, status: LockedStatus) {
-        this.props.addTag(name, status);
-        this.clearAddNewTag();
+        let success = this.props.addTag(name, status);
+        if (success) {
+            this.clearAddNewTag();
+        }
+        else {
+            alert("Tag name already exists");
+        }
     }
 
     clearAddNewTag() {
@@ -122,6 +138,42 @@ class Home extends React.Component<Props, State> {
             selectedDiagrams: diagrams
         })
     }
+
+    editTag(e: React.MouseEvent, tag: string) {
+        e.stopPropagation();
+        this.setState({
+            editTagScreen: true,
+            tagToEdit: tag
+        })
+    }
+
+    clearEditTagScreen() {
+        this.setState({
+            editTagScreen: false,
+            tagToEdit: null
+        })
+    }
+
+    updateTag(originalName: string, newName: string, lockedStatus: LockedStatus) {
+        let success = this.props.updateTag(originalName, newName, lockedStatus);
+        if (success) {
+            this.setState({
+                editTagScreen: false,
+                tagToEdit: null
+            })
+        }
+        else {
+            alert("Tag name already exists");
+        }
+    }
+
+    deleteTag(name: string) {
+        this.props.deleteTag(name);
+        this.setState({
+            editTagScreen: false,
+            tagToEdit: null
+        })
+    } 
 
     render() {
         let editScreen: JSX.Element;
@@ -162,8 +214,22 @@ class Home extends React.Component<Props, State> {
 
         let tagNames: string[] = Object.keys(this.props.tags);
         let tags = tagNames.map(t => {
-            return <div key={t} className='tag' onClick={() => this.setTag(t)}>{t}</div>
+            return (
+            <div key={t} className='tag' onClick={() => this.setTag(t)}>
+                {t}
+                <div className='edit' onClick={(e) => this.editTag(e, t)}>E</div>
+            </div>
+            )
         })
+
+        let editTagScreen: JSX.Element;
+        if (this.state.editTagScreen) {
+            editTagScreen = <EditTagScreen clearScreen={this.clearEditTagScreen} 
+                                updateTag={this.updateTag}
+                                deleteTag={this.deleteTag}
+                                name={this.state.tagToEdit}
+                                lockedStatus={this.props.tags[this.state.tagToEdit]?.locked}/>
+        }
 
         return (
             <div className='Home'>
@@ -188,6 +254,7 @@ class Home extends React.Component<Props, State> {
                 </div>
                 {editScreen}
                 {addNewTagScreen}
+                {editTagScreen}
             </div>
         )
     }

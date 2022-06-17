@@ -45,6 +45,8 @@ class App extends React.Component<Props, State> {
         this.getDiagramsForTag = this.getDiagramsForTag.bind(this);
         this.addTagForDiagram = this.addTagForDiagram.bind(this);
         this.removeTagFromDiagram = this.removeTagFromDiagram.bind(this);
+        this.updateTag = this.updateTag.bind(this);
+        this.deleteTag = this.deleteTag.bind(this);
     }
 
     goToHomePage() {
@@ -61,6 +63,11 @@ class App extends React.Component<Props, State> {
     }
 
     addTag(name: string, status: LockedStatus) {
+        let tagFound = Object.keys(this.state.tags).find(t => {
+            return t.toLowerCase() === name.toLowerCase()
+        });
+        if (tagFound) return false;
+
         this.setState((state) => ({
             tags: {
                 ...state.tags,
@@ -70,6 +77,7 @@ class App extends React.Component<Props, State> {
                 }
             }
         }))
+        return true;
     }
 
     getDiagramsForTag(tags: string[]): {[id: string]: boolean} {
@@ -106,6 +114,38 @@ class App extends React.Component<Props, State> {
         })
     }
 
+    updateTag(originalName: string, newName: string, lockedStatus: LockedStatus): boolean {
+        let tagFound = Object.keys(this.state.tags).find(t => {
+            return t.toLowerCase() === newName.toLowerCase() && t !== originalName
+        });
+        if (tagFound) return false;
+
+        this.setState((state) => {
+            let newTags = this.state.tags;
+            if (originalName !== newName) {
+                let value = newTags[originalName];
+                newTags[newName] = value;
+                delete newTags[originalName];
+            }
+            newTags[newName].locked = lockedStatus;
+
+            return {
+                tags: newTags
+            }
+        })
+        return true;
+    }
+
+    deleteTag(name: string) {
+        this.setState((state) => {
+            let newTags = state.tags;
+            delete newTags[name];
+            return {
+                tags: newTags
+            }
+        })
+    }
+
     render() {
         let page: JSX.Element;
         if (this.state.page === Pages.Login) {
@@ -117,7 +157,9 @@ class App extends React.Component<Props, State> {
             tags={this.state.tags} 
             getDiagramsForTag={this.getDiagramsForTag}
             addTagForDiagram={this.addTagForDiagram}
-            removeTagFromDiagram={this.removeTagFromDiagram}/>
+            removeTagFromDiagram={this.removeTagFromDiagram}
+            updateTag={this.updateTag}
+            deleteTag={this.deleteTag}/>
         }
         else if (this.state.page === Pages.Diagram) {
             page = <Diagram id={this.state.selectedDiagram} />

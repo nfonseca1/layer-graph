@@ -43,6 +43,10 @@ class AddNewTag extends React.Component<Props, State> {
     }
 
     addTag() {
+        if (this.state.name === '') {
+            alert("Tag name cannot be blank");
+            return;
+        } 
         this.props.addTag(this.state.name, this.state.lockedStatus);
     }
 
