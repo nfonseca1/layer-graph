@@ -86,7 +86,7 @@ app.post("/setNodes", (req, res) => {
     })
 })
 
-app.post("/setDiagram", (req: IRequest, res, ) => {
+app.post("/setDiagram", (req: IRequest, res) => {
     let userId = req.session.user?.id;
     if (!userId) {
         res.send({status: Status.Failed});
@@ -102,7 +102,7 @@ app.post("/setDiagram", (req: IRequest, res, ) => {
     })
 })
 
-app.post("/updateDiagram", (req: IRequest, res, ) => {
+app.post("/updateDiagram", (req: IRequest, res) => {
     let userId = req.session.user?.id;
     if (!userId) {
         res.send({status: Status.Failed});
@@ -114,6 +114,22 @@ app.post("/updateDiagram", (req: IRequest, res, ) => {
         res.send({
             status: results.status,
             data: results.data
+        })
+    })
+})
+
+app.post("/updateTags", (req: IRequest, res) => {
+    let username = req.session.user?.username;
+    if (!username) {
+        res.send({status: Status.Failed});
+        return;
+    }
+
+    db.updateUserTags(username, req.body.tags)
+    .then(results => {
+        res.send({
+            status: results.status,
+            data: null
         })
     })
 })
@@ -146,7 +162,8 @@ app.post("/login", async (req: IRequest, res) => {
             id: results.data.id
         }
         res.send({
-            status: LoginStatus.Success
+            status: LoginStatus.Success,
+            data: results.data.tags
         });
     }
     else {

@@ -44,10 +44,26 @@ export interface IRequest extends Request {
     session: any
 }
 
+export enum LockedStatus {
+    Unlocked,
+    Partial,
+    Full
+}
+
+export interface TagList {
+    [tagName: string]: {
+        locked: LockedStatus,
+        diagrams: {
+            [id: string]: boolean
+        }
+    }
+}
+
 export interface User {
 	username: string,
 	id: string,
-	passwordHash: string
+	passwordHash: string,
+    tags: TagList
 }
 
 // Result type

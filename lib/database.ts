@@ -1,5 +1,5 @@
 import {DynamoDB, S3, Credentials} from 'aws-sdk';
-import {IDiagram, INode, User, Status, DbResults, GetUserStatus, AddUserStatus, IDiagramPreview} from './types';
+import {IDiagram, INode, User, Status, DbResults, GetUserStatus, AddUserStatus, IDiagramPreview, TagList} from './types';
 import bcrypt from 'bcrypt';
 import {v4 as uuidv4} from 'uuid';
 import dotenv from 'dotenv';
@@ -136,6 +136,38 @@ function updateDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Sta
     })
 }
 
+function updateUserTags(username: string, tags: TagList): Promise<DbResults<Status, null>> {
+    let params: DynamoDB.DocumentClient.UpdateItemInput = {
+        TableName: 'LayerGraph_Users',
+        Key: {
+            username: username
+        },
+        UpdateExpression: 'set #tags = :newTags',
+        ExpressionAttributeNames: {
+            '#tags': 'tags'
+        },
+        ExpressionAttributeValues: {
+            ':newTags': tags
+        }
+    }
+
+    return dbClient.update(params).promise()
+    .then(data => {
+        console.log(`Successfully updated tags for user: ${username}`);
+        return {
+            status: Status.Success,
+            data: null
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to update tags for user: ${username}`);
+        return {
+            status: Status.Failed,
+            error: e
+        }
+    })
+}
+
 function getUser(username: string): Promise<DbResults<GetUserStatus, User>> {
     let params: DynamoDB.DocumentClient.GetItemInput = {
         TableName: 'LayerGraph_Users',
@@ -203,7 +235,8 @@ async function addUser(username: string, password: string): Promise<DbResults<Ad
         Item: {
             username: username,
             passwordHash: hash,
-            id: uuid
+            id: uuid,
+            tags: {}
         }
     }
 
@@ -280,6 +313,7 @@ export default {
     getDiagramsForUser, 
     setDiagram, 
     updateDiagram,
+    updateUserTags,
     getNodes, 
     setNodes,
     getUser,

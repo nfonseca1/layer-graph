@@ -1,9 +1,9 @@
 import * as React from 'react';
 import db from '../lib/database';
-import { AddUserStatus, LoginStatus } from '../lib/types';
+import { AddUserStatus, LoginStatus, TagList } from '../lib/types';
 
 interface Props {
-    goToHomePage: () => void
+    goToHomePage: (tags: TagList) => void
 }
 
 interface State {
@@ -88,7 +88,7 @@ class Login extends React.Component<Props, State> {
             else if (results.status === LoginStatus.Failed) {
                 alert("An error occurred while trying to log in");
             }
-            else this.props.goToHomePage();
+            else this.props.goToHomePage(results.data);
         })
     }   
 
@@ -110,7 +110,7 @@ class Login extends React.Component<Props, State> {
             else if (results.status === AddUserStatus.Failed) {
                 alert('An error occurred while trying to register');
             }
-            else this.props.goToHomePage();
+            else this.props.goToHomePage({});
         })
     }
 

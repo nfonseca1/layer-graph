@@ -1,14 +1,9 @@
 import * as React from 'react';
+import { LockedStatus } from '../lib/types';
 
 interface Props {
     addTag: (name: string, status: LockedStatus) => void,
     clearAddNewTag: () => void
-}
-
-export enum LockedStatus {
-    Unlocked,
-    Partial,
-    Full
 }
 
 interface State {

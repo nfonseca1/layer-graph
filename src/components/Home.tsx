@@ -2,11 +2,10 @@ import * as React from 'react';
 import db from '../lib/database';
 import {v4 as uuidv4} from 'uuid';
 import {Locked} from './Diagram';
-import { Status } from '../lib/types';
+import { LockedStatus, Status, TagList } from '../lib/types';
 import EditScreen from './EditScreen';
 import EditTagScreen from './EditTagScreen';
-import AddNewTag, {LockedStatus} from './AddNewTag';
-import {TagList} from './App';
+import AddNewTag from './AddNewTag';
 
 interface Props {
     openDiagram: (id: string) => void,

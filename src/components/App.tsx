@@ -2,25 +2,11 @@ import * as React from 'react';
 import Home from './Home';
 import Diagram from './Diagram';
 import Login from './Login';
-import {LockedStatus} from './AddNewTag';
+import { LockedStatus, Pages, TagList } from '../lib/types';
+import db from '../lib/database';
 
 interface Props {
 
-}
-
-enum Pages {
-    Login,
-    Home,
-    Diagram
-}
-
-export interface TagList {
-    [tagName: string]: {
-        locked: LockedStatus,
-        diagrams: {
-            [id: string]: boolean
-        }
-    }
 }
 
 interface State {
@@ -49,9 +35,10 @@ class App extends React.Component<Props, State> {
         this.deleteTag = this.deleteTag.bind(this);
     }
 
-    goToHomePage() {
+    goToHomePage(tags: TagList) {
         this.setState({
-            page: Pages.Home
+            page: Pages.Home,
+            tags: tags
         })
     }
 
@@ -76,7 +63,9 @@ class App extends React.Component<Props, State> {
                     diagrams: {}
                 }
             }
-        }))
+        }), () => {
+            db.updateTags(this.state.tags);
+        })
         return true;
     }
 
@@ -99,6 +88,8 @@ class App extends React.Component<Props, State> {
             return {
                 tags: newTags
             }
+        }, () => {
+            db.updateTags(this.state.tags);
         })
     }
 
@@ -111,6 +102,8 @@ class App extends React.Component<Props, State> {
             return {
                 tags: newTags
             }
+        }, () => {
+            db.updateTags(this.state.tags);
         })
     }
 
@@ -132,6 +125,8 @@ class App extends React.Component<Props, State> {
             return {
                 tags: newTags
             }
+        }, () => {
+            db.updateTags(this.state.tags);
         })
         return true;
     }
@@ -143,6 +138,8 @@ class App extends React.Component<Props, State> {
             return {
                 tags: newTags
             }
+        }, () => {
+            db.updateTags(this.state.tags);
         })
     }
 

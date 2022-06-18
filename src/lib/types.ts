@@ -26,3 +26,24 @@ export interface DbResults<S, D> {
     status: S,
     data?: D
 }
+
+export enum Pages {
+    Login,
+    Home,
+    Diagram
+}
+
+export enum LockedStatus {
+    Unlocked,
+    Partial,
+    Full
+}
+
+export interface TagList {
+    [tagName: string]: {
+        locked: LockedStatus,
+        diagrams: {
+            [id: string]: boolean
+        }
+    }
+}

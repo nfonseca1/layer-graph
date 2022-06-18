@@ -1,8 +1,7 @@
 import {INode} from '../components/Node';
 import {IDiagram} from '../components/Diagram';
 import {IDiagramPreview} from '../components/Home';
-import {DbResults, Status, GetUserStatus, AddUserStatus, LoginStatus} from './types';
-import { response } from 'express';
+import {DbResults, Status, GetUserStatus, AddUserStatus, LoginStatus, TagList} from './types';
 
 // Read Functions
 
@@ -70,7 +69,21 @@ export function updateDiagram(diagram: IDiagram): Promise<DbResults<Status, stri
     .catch(e => console.error(e));
 }
 
-export function login(username: string, password: string): Promise<DbResults<LoginStatus, {}>> {
+export function updateTags(tags: TagList): Promise<DbResults<Status, string>> {
+    return fetch('/updateTags', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            tags: tags
+        })
+    })
+    .then(response => response.json())
+    .catch(e => console.error(e));
+}
+
+export function login(username: string, password: string): Promise<DbResults<LoginStatus, TagList>> {
     return fetch('/login', {
         method: 'POST',
         headers: {
@@ -82,7 +95,7 @@ export function login(username: string, password: string): Promise<DbResults<Log
         })
     })
     .then(response => response.json())
-    .then((results: DbResults<LoginStatus, {}>) => {
+    .then((results: DbResults<LoginStatus, TagList>) => {
         return results;
     })
 }
@@ -109,6 +122,7 @@ export default {
     setNodes, 
     setDiagram,
     updateDiagram,
+    updateTags,
     login,
     signup
 }
