@@ -58,6 +58,7 @@ module.exports = {
             '/setNodes': 'http://localhost:3000',
             '/setDiagram': 'http://localhost:3000',
             '/updateDiagram': 'http://localhost:3000',
+            '/deleteDiagram': 'http://localhost:3000',
             '/updateTags': 'http://localhost:3000',
             '/login': 'http://localhost:3000',
             '/signup': 'http://localhost:3000'

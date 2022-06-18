@@ -47,3 +47,10 @@ export interface TagList {
         }
     }
 }
+
+export interface IDiagramPreview {
+    id: string,
+    title: string,
+    description: string,
+    locked: LockedStatus
+}

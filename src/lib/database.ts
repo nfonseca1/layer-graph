@@ -1,7 +1,6 @@
 import {INode} from '../components/Node';
 import {IDiagram} from '../components/Diagram';
-import {IDiagramPreview} from '../components/Home';
-import {DbResults, Status, GetUserStatus, AddUserStatus, LoginStatus, TagList} from './types';
+import {DbResults, Status, GetUserStatus, AddUserStatus, LoginStatus, TagList, IDiagramPreview, LockedStatus} from './types';
 
 // Read Functions
 
@@ -55,7 +54,7 @@ export function setDiagram(diagram: IDiagram): Promise<DbResults<Status, string>
     .catch(e => console.error(e));
 }
 
-export function updateDiagram(diagram: IDiagram): Promise<DbResults<Status, string>> {
+export function updateDiagram(diagram: IDiagram | IDiagramPreview): Promise<DbResults<Status, string>> {
     return fetch('/updateDiagram', {
         method: 'POST',
         headers: {
@@ -63,6 +62,20 @@ export function updateDiagram(diagram: IDiagram): Promise<DbResults<Status, stri
         },
         body: JSON.stringify({
             diagram: diagram
+        })
+    })
+    .then(response => response.json())
+    .catch(e => console.error(e));
+}
+
+export function deleteDiagram(id: string): Promise<DbResults<Status, null>> {
+    return fetch('/deleteDiagram', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            diagramId: id
         })
     })
     .then(response => response.json())
@@ -122,6 +135,7 @@ export default {
     setNodes, 
     setDiagram,
     updateDiagram,
+    deleteDiagram,
     updateTags,
     login,
     signup

@@ -109,17 +109,33 @@ function setDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status
     })
 }
 
-function updateDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Status, string>> {
-    let params: DynamoDB.DocumentClient.PutItemInput = {
-        TableName: 'LayerGraph_Trees',
-        Item: {
-            ...diagram,
-            userId: userId,
-            id: diagram.id
+function updateDiagram(userId: string, diagram: IDiagram | IDiagramPreview): Promise<DbResults<Status, string>> {
+    let expression = 'set ';
+    let expressionParts = [];
+    let expressionAttributeNames: DynamoDB.DocumentClient.ExpressionAttributeNameMap = {}
+    let expressionAttributeValues: DynamoDB.DocumentClient.ExpressionAttributeValueMap = {}
+    
+    for (let [key, value] of Object.entries(diagram)) {
+        if (key !== 'id' && key !== 'userId') {
+            expressionParts.push(`#${key} = :${key}Value`);
+            expressionAttributeNames[`#${key}`] = key;
+            expressionAttributeValues[`:${key}Value`] = value;
         }
     }
+    expression += expressionParts.join(", ");
+    
+    let params: DynamoDB.DocumentClient.UpdateItemInput = {
+        TableName: 'LayerGraph_Trees',
+        Key: {
+            userId: userId,
+            id: diagram.id
+        },
+        UpdateExpression: expression,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues
+    }
 
-    return dbClient.put(params).promise()
+    return dbClient.update(params).promise()
     .then(data => {
         console.log(`Successfully updated diagram with id: ${diagram.id}`);
         return {
@@ -129,6 +145,35 @@ function updateDiagram(userId: string, diagram: IDiagram): Promise<DbResults<Sta
     })
     .catch(e => {
         console.error(`Failed to add/update diagram with id: ${diagram.id} \n`, e);
+        return {
+            status: Status.Failed,
+            error: e
+        }
+    })
+}
+
+function deleteDiagram(userId: string, diagramId: string): Promise<DbResults<Status, null>> {
+    let params: DynamoDB.DocumentClient.DeleteItemInput = {
+        TableName: 'LayerGraph_Trees',
+        Key: {
+            userId: userId,
+            id: diagramId
+        }
+    }
+
+    return dbClient.delete(params).promise()
+    .then(data => {
+        return deleteNodes(diagramId);
+    })
+    .then(data => {
+        console.log(`Successfully deleted diagram with id: ${diagramId}`);
+        return {
+            status: Status.Success,
+            data: null
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to delete diagram with id: ${diagramId}`);
         return {
             status: Status.Failed,
             error: e
@@ -307,15 +352,40 @@ function setNodes(diagramId: string, nodes: INode[]): Promise<DbResults<Status, 
     })
 }
 
+function deleteNodes(diagramId: string): Promise<DbResults<Status, null>> {
+    let params: S3.DeleteObjectRequest = {
+        Bucket: process.env.BUCKET,
+        Key: `nodes_${diagramId}.json`
+    }
+
+    return s3.deleteObject(params).promise()
+    .then(data => {
+        console.log(`Successfully deleted nodes for diagram: ${diagramId}`);
+        return {
+            status: Status.Success,
+            data: null
+        }
+    })
+    .catch(e => {
+        console.error(`Failed to delete nodes for diagram: ${diagramId}`);
+        return {
+            status: Status.Failed,
+            error: e
+        }
+    })
+}
+
 // Exports
 export default {
     getDiagram, 
     getDiagramsForUser, 
     setDiagram, 
     updateDiagram,
+    deleteDiagram,
     updateUserTags,
     getNodes, 
     setNodes,
+    deleteNodes,
     getUser,
     addUser
 }

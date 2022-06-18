@@ -11,7 +11,6 @@ export interface IDiagram {
     userId: string,
 	title: string,
 	description: string
-	tags?: string[]
 	locked?: Locked,
 	rootNodes: string[],
 	channels: {

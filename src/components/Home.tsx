@@ -1,8 +1,7 @@
 import * as React from 'react';
 import db from '../lib/database';
 import {v4 as uuidv4} from 'uuid';
-import {Locked} from './Diagram';
-import { LockedStatus, Status, TagList } from '../lib/types';
+import { IDiagramPreview, LockedStatus, Status, TagList } from '../lib/types';
 import EditScreen from './EditScreen';
 import EditTagScreen from './EditTagScreen';
 import AddNewTag from './AddNewTag';
@@ -16,14 +15,6 @@ interface Props {
     updateTag: (originalName: string, newName: string, lockedStatus: LockedStatus) => boolean,
     deleteTag: (name: string) => void,
     tags: TagList
-}
-
-export interface IDiagramPreview {
-    id: string,
-    title: string,
-    description: string,
-    tags: string[],
-    locked: Locked
 }
 
 interface State {
@@ -60,6 +51,8 @@ class Home extends React.Component<Props, State> {
         this.clearEditTagScreen = this.clearEditTagScreen.bind(this);
         this.updateTag = this.updateTag.bind(this);
         this.deleteTag = this.deleteTag.bind(this);
+        this.deleteDiagram = this.deleteDiagram.bind(this);
+        this.setDiagramLockedStatus = this.setDiagramLockedStatus.bind(this);
     }
 
     componentDidMount(): void {
@@ -82,7 +75,7 @@ class Home extends React.Component<Props, State> {
             title: 'New Diagram',
             description: '',
             tags: [],
-            locked: Locked.Unlocked,
+            locked: LockedStatus.Unlocked,
             channels: [],
             rootNodes: []
         }
@@ -174,6 +167,45 @@ class Home extends React.Component<Props, State> {
         })
     } 
 
+    deleteDiagram(id: string) {
+        this.setState((state) => {
+            let newDiagrams = state.diagrams;
+            let newSelectedDiagrams = state.selectedDiagrams;
+
+            newDiagrams = newDiagrams.filter(d => d.id !== id);
+            if (newSelectedDiagrams && newSelectedDiagrams[id]) {
+                delete newSelectedDiagrams[id];
+            }
+
+            return {
+                diagrams: newDiagrams,
+                selectedDiagrams: newSelectedDiagrams || null,
+                diagramBeingEdited: null,
+                editScreen: false
+            }
+        }, () => {
+            db.deleteDiagram(id);
+        })
+    }
+
+    setDiagramLockedStatus(diagramId: string, status: LockedStatus) {
+        this.setState((state) => {
+            let newDiagrams = state.diagrams;
+            newDiagrams = newDiagrams.map(d => {
+                if (d.id === diagramId) {
+                    d.locked = status
+                }
+                return d;
+            })
+
+            return {
+                diagrams: newDiagrams
+            }
+        }, () => {
+            db.updateDiagram(this.state.diagrams.find(d => d.id === diagramId));
+        })
+    }
+
     render() {
         let editScreen: JSX.Element;
         if (this.state.editScreen) {
@@ -189,7 +221,9 @@ class Home extends React.Component<Props, State> {
                             details={diagram} 
                             clearEditScreen={this.clearEditScreen} 
                             addTagForDiagram={this.props.addTagForDiagram}
-                            removeTagFromDiagram={this.props.removeTagFromDiagram}/>
+                            removeTagFromDiagram={this.props.removeTagFromDiagram}
+                            deleteDiagram={this.deleteDiagram}
+                            setDiagramLockedStatus={this.setDiagramLockedStatus}/>
         }
 
         let addNewTagScreen: JSX.Element;

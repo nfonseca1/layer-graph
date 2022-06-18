@@ -6,7 +6,7 @@ import {INode, INodeUpdate} from './Node';
 import db from '../lib/database';
 import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
-import { Status } from '../lib/types';
+import { LockedStatus, Status } from '../lib/types';
 import { stringify } from 'querystring';
 
 interface Props {
@@ -32,17 +32,12 @@ interface State {
     selectedChannel: number
 }
 
-export enum Locked {
-    Unlocked = 1,
-    Locked = 2
-}
-
 export interface IDiagram {
     id: string,
 	title: string,
 	description: string
 	tags?: string[]
-	locked?: Locked,
+	locked?: LockedStatus,
 	rootNodes: string[],
 	channels: {
         name: string,
