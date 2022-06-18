@@ -61,6 +61,7 @@ module.exports = {
             '/deleteDiagram': 'http://localhost:3000',
             '/updateTags': 'http://localhost:3000',
             '/login': 'http://localhost:3000',
+            '/verifyPassword': 'http://localhost:3000',
             '/signup': 'http://localhost:3000'
         }
     },

@@ -5,6 +5,7 @@ import { IDiagramPreview, LockedStatus, Status, TagList } from '../lib/types';
 import EditScreen from './EditScreen';
 import EditTagScreen from './EditTagScreen';
 import AddNewTag from './AddNewTag';
+import VerifyPasswordScreen from './VerifyPasswordScreen';
 
 interface Props {
     openDiagram: (id: string) => void,
@@ -14,7 +15,9 @@ interface Props {
     removeTagFromDiagram: (name: string, id: string) => void,
     updateTag: (originalName: string, newName: string, lockedStatus: LockedStatus) => boolean,
     deleteTag: (name: string) => void,
-    tags: TagList
+    setPartialLockedTriggered: () => void,
+    tags: TagList,
+    partialLockedTriggered: boolean
 }
 
 interface State {
@@ -24,7 +27,11 @@ interface State {
     editScreen: boolean,
     addNewTagScreen: boolean,
     editTagScreen: boolean,
-    tagToEdit: string
+    verifyPasswordScreen: boolean,
+    tagToEdit: string,
+    postVerifyFunction: any,
+    fullLockedTriggered: boolean,
+    tagToVerify: string
 }
 
 class Home extends React.Component<Props, State> {
@@ -38,7 +45,11 @@ class Home extends React.Component<Props, State> {
             editScreen: false,
             addNewTagScreen: false,
             editTagScreen: false,
-            tagToEdit: null
+            verifyPasswordScreen: false,
+            tagToEdit: null,
+            postVerifyFunction: null,
+            fullLockedTriggered: false,
+            tagToVerify: null
         }
 
         this.onCreateNew = this.onCreateNew.bind(this);
@@ -47,12 +58,17 @@ class Home extends React.Component<Props, State> {
         this.showAddNewTag = this.showAddNewTag.bind(this);
         this.addTag = this.addTag.bind(this);
         this.clearAddNewTag = this.clearAddNewTag.bind(this);
+        this.setTag = this.setTag.bind(this);
+        this.executeSetTag = this.executeSetTag.bind(this);
         this.editTag = this.editTag.bind(this);
+        this.executeEditTag = this.executeEditTag.bind(this);
         this.clearEditTagScreen = this.clearEditTagScreen.bind(this);
         this.updateTag = this.updateTag.bind(this);
         this.deleteTag = this.deleteTag.bind(this);
         this.deleteDiagram = this.deleteDiagram.bind(this);
         this.setDiagramLockedStatus = this.setDiagramLockedStatus.bind(this);
+        this.verifyPassword = this.verifyPassword.bind(this);
+        this.clearVerifyPasswordScreen = this.clearVerifyPasswordScreen.bind(this);
     }
 
     componentDidMount(): void {
@@ -125,6 +141,24 @@ class Home extends React.Component<Props, State> {
     }
 
     setTag(name: string) {
+        let lockedStatus = this.props.tags[name]?.locked;
+        let partialTriggered = this.props.partialLockedTriggered;
+        let fullTriggered = this.state.fullLockedTriggered;
+        if ((lockedStatus === LockedStatus.Partial && partialTriggered === false)
+            || (lockedStatus === LockedStatus.Full && fullTriggered === false)) {
+            
+            this.setState({
+                tagToVerify: name,
+                verifyPasswordScreen: true,
+                postVerifyFunction: () => this.executeSetTag(name)
+            })
+            return;
+        }
+
+        this.executeSetTag(name);
+    }
+
+    executeSetTag(name: string) {
         let diagrams = this.props.getDiagramsForTag([name]);
         this.setState({
             selectedDiagrams: diagrams
@@ -132,6 +166,24 @@ class Home extends React.Component<Props, State> {
     }
 
     editTag(e: React.MouseEvent, tag: string) {
+        let lockedStatus = this.props.tags[tag]?.locked;
+        let partialTriggered = this.props.partialLockedTriggered;
+        let fullTriggered = this.state.fullLockedTriggered;
+        if ((lockedStatus === LockedStatus.Partial && partialTriggered === false)
+            || (lockedStatus === LockedStatus.Full && fullTriggered === false)) {
+            
+            this.setState({
+                tagToVerify: tag,
+                verifyPasswordScreen: true,
+                postVerifyFunction: () => this.executeEditTag(e, tag)
+            })
+            return;
+        }
+
+        this.executeEditTag(e, tag);
+    }
+
+    executeEditTag(e: React.MouseEvent, tag: string) {
         e.stopPropagation();
         this.setState({
             editTagScreen: true,
@@ -206,6 +258,43 @@ class Home extends React.Component<Props, State> {
         })
     }
 
+    verifyPassword(password: string) {
+        db.verifyPassword(password)
+        .then(results => {
+            if (results.status === Status.Success) {
+                if (this.props.tags[this.state.tagToVerify].locked === LockedStatus.Full) {
+                    this.setState({
+                        verifyPasswordScreen: false,
+                        fullLockedTriggered: true,
+                        tagToVerify: null
+                    })
+                    this.state.postVerifyFunction();
+                }
+                else if (this.props.tags[this.state.tagToVerify].locked === LockedStatus.Partial) {
+                    this.setState({
+                        verifyPasswordScreen: false,
+                        tagToVerify: null
+                    })
+                    this.props.setPartialLockedTriggered();
+                    this.state.postVerifyFunction();
+                }
+            }
+            else {
+                this.setState({
+                    verifyPasswordScreen: false
+                }, () => {
+                    alert("Password was incorrect");
+                })
+            }
+        })
+    }
+
+    clearVerifyPasswordScreen() {
+        this.setState({
+            verifyPasswordScreen: false
+        })
+    }
+
     render() {
         let editScreen: JSX.Element;
         if (this.state.editScreen) {
@@ -264,6 +353,13 @@ class Home extends React.Component<Props, State> {
                                 lockedStatus={this.props.tags[this.state.tagToEdit]?.locked}/>
         }
 
+        let verifyPasswordScreen: JSX.Element;
+        if (this.state.verifyPasswordScreen) {
+            verifyPasswordScreen = <VerifyPasswordScreen 
+                                    verifyPassword={this.verifyPassword}
+                                    clearScreen={this.clearVerifyPasswordScreen}/>
+        }
+
         return (
             <div className='Home'>
                 <div className='sidePanel'>
@@ -288,6 +384,7 @@ class Home extends React.Component<Props, State> {
                 {editScreen}
                 {addNewTagScreen}
                 {editTagScreen}
+                {verifyPasswordScreen}
             </div>
         )
     }

@@ -205,6 +205,32 @@ app.post("/login", async (req: IRequest, res) => {
     }
 })
 
+app.post("/verifyPassword", (req: IRequest, res) => {
+    let username = req.session.user?.username;
+    if (!username) {
+        res.send({status: Status.Failed});
+        return;
+    }
+
+    db.getUser(username)
+    .then(results => {
+        if (results.status !== GetUserStatus.Success) return false;
+        return bcrypt.compare(req.body.password, results.data.passwordHash)
+    })
+    .then(match => {
+        if (match) {
+            res.send({
+                status: Status.Success
+            })
+        }
+        else {
+            res.send({
+                status: Status.Failed
+            })
+        }
+    })
+})
+
 app.post("/signup", (req: IRequest, res) => {
     let username = req.body.username;
     let password = req.body.password;

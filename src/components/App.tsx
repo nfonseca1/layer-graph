@@ -12,7 +12,8 @@ interface Props {
 interface State {
     page: Pages,
     selectedDiagram: string,
-    tags: TagList
+    tags: TagList,
+    partialLockedTriggered: boolean
 }
 
 class App extends React.Component<Props, State> {
@@ -22,7 +23,8 @@ class App extends React.Component<Props, State> {
         this.state = {
             page: Pages.Login,
             selectedDiagram: null,
-            tags: {}
+            tags: {},
+            partialLockedTriggered: false
         }
 
         this.goToHomePage = this.goToHomePage.bind(this);
@@ -156,7 +158,9 @@ class App extends React.Component<Props, State> {
             addTagForDiagram={this.addTagForDiagram}
             removeTagFromDiagram={this.removeTagFromDiagram}
             updateTag={this.updateTag}
-            deleteTag={this.deleteTag}/>
+            deleteTag={this.deleteTag}
+            partialLockedTriggered={this.state.partialLockedTriggered}
+            setPartialLockedTriggered={() => this.setState({partialLockedTriggered: true})}/>
         }
         else if (this.state.page === Pages.Diagram) {
             page = <Diagram id={this.state.selectedDiagram} />

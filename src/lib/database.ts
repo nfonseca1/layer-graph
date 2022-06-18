@@ -113,6 +113,19 @@ export function login(username: string, password: string): Promise<DbResults<Log
     })
 }
 
+export function verifyPassword(password: string): Promise<DbResults<Status, null>> {
+    return fetch('/verifyPassword', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            password
+        })
+    })
+    .then(response => response.json())
+}
+
 export function signup(username: string, password: string): Promise<DbResults<AddUserStatus, {}>> {
     return fetch('/signup', {
         method: 'POST',
@@ -138,5 +151,6 @@ export default {
     deleteDiagram,
     updateTags,
     login,
+    verifyPassword,
     signup
 }
