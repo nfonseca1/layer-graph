@@ -322,7 +322,26 @@ class Home extends React.Component<Props, State> {
 
         let previews = this.state.diagrams.map(d => {
             let selected = this.state.selectedDiagrams;
-            if (selected === null || selected[d.id]) {
+            let verified = true;
+            
+            for (let details of Object.values(this.props.tags)) {
+                if (details.diagrams[d.id]) {
+                    if (details.locked === LockedStatus.Full) {
+                        if (!this.state.fullLockedTriggered) {
+                            verified = false;
+                            break;
+                        }
+                    }
+                    else if (details.locked === LockedStatus.Partial) {
+                        if (!this.props.partialLockedTriggered) {
+                            verified = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ((selected === null || selected[d.id]) && verified) {
                 return (
                     <div className='preview' key={d.id} onClick={() => this.props.openDiagram(d.id)}>
                         <h2>{d.title}</h2>

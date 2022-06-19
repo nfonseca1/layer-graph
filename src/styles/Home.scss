@@ -85,7 +85,7 @@
         .diagrams {
             padding: 2em;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             flex-wrap: wrap;
     
@@ -102,6 +102,7 @@
                 border-radius: 5px;
                 box-shadow: -4px 5px 6px 1px rgba(0,0,0,0.65);
                 overflow-y: scroll;
+                margin-right: 1em;
                 &::-webkit-scrollbar {
                     display: none;
                 }
