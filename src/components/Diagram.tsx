@@ -7,7 +7,7 @@ import db from '../lib/database';
 import utils from '../lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { LockedStatus, Status } from '../lib/types';
-import { stringify } from 'querystring';
+import ConvertToNodesScreen from './ConvertToNodesScreen';
 
 interface Props {
     id: string
@@ -29,7 +29,8 @@ interface State {
         color: string
     }[],
     colorDropdown: boolean,
-    selectedChannel: number
+    selectedChannel: number,
+    convertScreen: boolean
 }
 
 export interface IDiagram {
@@ -64,7 +65,8 @@ class Diagram extends React.Component<Props, State> {
                 name: 'channel 1'
             }],
             colorDropdown: false,
-            selectedChannel: 1
+            selectedChannel: 1,
+            convertScreen: false
         }
 
         this.addNode = this.addNode.bind(this);
@@ -82,6 +84,10 @@ class Diagram extends React.Component<Props, State> {
         this.onTitleChange = this.onTitleChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onChannelNameChange = this.onChannelNameChange.bind(this);
+        this.showConvertScreen = this.showConvertScreen.bind(this);
+        this.clearConvertScreen = this.clearConvertScreen.bind(this); 
+        this.convertToNodes = this.convertToNodes.bind(this);
+        this.goToLayer = this.goToLayer.bind(this);
     }
 
     async componentDidMount(): Promise<void> {
@@ -349,6 +355,95 @@ class Diagram extends React.Component<Props, State> {
         })
     }
 
+    showConvertScreen() {
+        this.setState({
+            convertScreen: true
+        })
+    }
+
+    clearConvertScreen() {
+        this.setState({
+            convertScreen: false
+        })
+    }
+
+    convertToNodes(text: string) {
+        let channel = 1;
+
+        let nodes: INode[] = [];
+        let lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            let id = uuidv4();
+            let parent = i > 0 ? nodes[i - 1].id : this.state.layerParent;
+            let node: INode = {
+                id: id,
+                parent: parent,
+                children: [],
+                comment: '',
+                subComment: '',
+                content: lines[i],
+                channel: channel
+            }
+
+            if (i > 0) nodes[i - 1].children.push(id);
+            channel = channel === 2 ? 1 : 2;
+
+            nodes.push(node);
+        }
+
+        let rootNodesChanged = false;
+        this.setState((state) => {
+            let newLayerNodeIds = [...state.layerNodeIds];
+            newLayerNodeIds.push(nodes[0].id);
+
+            let newRootNodeIds = [...state.rootNodeIds];
+            if (!state.layerParent) {
+                newRootNodeIds.push(nodes[0].id);
+                rootNodesChanged = true;
+            }
+
+            let newNodes = {...state.nodes}
+            for (let node of nodes) {
+                newNodes[node.id] = node;
+            }
+            if (state.layerParent) {
+                newNodes[state.layerParent].children.push(nodes[0].id);
+            }
+
+            return {
+                layerNodeIds: newLayerNodeIds,
+                rootNodeIds: newRootNodeIds,
+                nodes: newNodes,
+                convertScreen: false
+            }
+
+        }, () => {
+            db.setNodes(this.props.id, Object.values(this.state.nodes));
+            if (rootNodesChanged) {
+                db.updateDiagram({
+                    id: this.props.id,
+                    title: this.state.title,
+                    description: this.state.description,
+                    rootNodes: this.state.rootNodeIds,
+                    channels: this.state.channelOptions
+                })
+            }
+        })
+    }
+
+    goToLayer(id: string) {
+        this.setState((state) => {
+            let newLayerNodeIds = [...state.layerNodeIds];
+            let targetNode = state.nodes[id];
+            newLayerNodeIds = targetNode.children;
+
+            return {
+                layerNodeIds: newLayerNodeIds,
+                layerParent: id
+            }
+        })
+    }
+
     render() {
         let layerNodes: INode[] = this.state.layerNodeIds.map(id => {
             return this.state.nodes[id];
@@ -372,6 +467,12 @@ class Diagram extends React.Component<Props, State> {
             </div>)
         })
 
+        let convertScreen: JSX.Element;
+        if (this.state.convertScreen) {
+            convertScreen = <ConvertToNodesScreen clearScreen={this.clearConvertScreen}
+                                convert={this.convertToNodes} />
+        }
+
         return (
             <div className="Diagram">
                 <div className="header">
@@ -394,11 +495,15 @@ class Diagram extends React.Component<Props, State> {
                             </div>
                             <ColorList selectColor={this.selectColor}/>
                         </div>
+                        <div className="parseOptions">
+                            <button className="parse" onClick={this.showConvertScreen}>Convert</button>
+                        </div>
                     </div>
                 </div>
                 <div className="view">
                     <LayerView nodes={nodeHierarchy.reverse()}
-                    channelOptions={this.state.channelOptions} />
+                    channelOptions={this.state.channelOptions}
+                    goToLayer={this.goToLayer} />
                     <NodeList nodes={layerNodes} 
                     parent={this.state.nodes[this.state.layerParent]} 
                     addNode={this.addNode} 
@@ -408,6 +513,7 @@ class Diagram extends React.Component<Props, State> {
                     goToParentLayer={this.goToParentLayer}
                     channelOptions={this.state.channelOptions} />
                 </div>
+                {convertScreen}
             </div>
         )
     }

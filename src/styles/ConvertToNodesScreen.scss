@@ -1,0 +1,55 @@
+@import 'utils';
+
+.ConvertToNodesScreenContainer {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    .ConvertToNodesScreenBackground {
+        position: absolute;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,.5);
+    }
+
+    .ConvertToNodesScreen {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 50vh;
+        height: 60vh;
+        background-color: lighten($bg-color, 30%);
+        border-radius: 4px;
+        z-index: 5;
+        padding: 1.5em;
+
+        textarea {
+            resize: none;
+            width: 100%;
+            height: 80%;
+            background-color: lighten($bg-color, 10%);
+            color: #f0f0f0;
+            padding: 0.5em;
+            border-radius: 5px;
+            &:focus {
+                outline: none;
+            }
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        .options {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+    }
+}

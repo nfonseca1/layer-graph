@@ -10,6 +10,9 @@
 
     .parentNode {
         margin-bottom: 1.5vh;
+        &:hover {
+            cursor: pointer;
+        }
 
         .content {
             width: 100%;
@@ -19,6 +22,10 @@
             box-shadow: -4px 5px 5px 3px rgb(0 0 0 / 65%);
             padding: 1vh;
             margin-bottom: 1vh;
+            overflow-y: scroll;
+            &::-webkit-scrollbar {
+                display: none;
+            }
         }
 
         .subComment {
