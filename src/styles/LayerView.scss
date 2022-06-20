@@ -23,7 +23,7 @@
         border-radius: 5px;
         border-top: 1px solid lighten($node-color, 15%);
         text-align: center;
-        margin-bottom: 8vh;
+        margin-bottom: 6vh;
         padding: .6vh;
         font-size: 0.9em;
         box-shadow: -4px 5px 7px 5px rgba(0,0,0,0.65);
@@ -38,18 +38,21 @@
 
     .comment {
         position: absolute;
-        top: -3vh;
-        left: 10%;
-        width: 80%;
-        padding: .4vh;
-        height: 2.5vh;
-        background-color: darken($node-color, 5%);
+        top: -2.5vh;
+        left: 5%;
+        width: 90%;
+        padding: .1vh .4vh;
+        height: 2vh;
+        background-color: lighten($node-color, 3%);
         border-radius: 5px;
         border-top: 1px solid lighten($node-color, 10%);
         box-shadow: -4px 1px 7px 2px rgba(0,0,0,0.65);
-        font-size: 0.85em;
+        font-size: 0.80em;
         color: darken($text-color, 10%);
         overflow-y: scroll;
+        display: inline-flex;
+        text-align: center;
+        justify-content: center;
         &::-webkit-scrollbar {
             display: none;
         }
@@ -58,7 +61,7 @@
     .subComment {
         @extend .comment;
         top: 5.5vh;
-        color: lighten($text-color, 5%);
+        color: #bababa;
         background-color: lighten($node-color, 5%);
         box-shadow: -4px 5px 7px 5px rgba(0,0,0,0.65);
     }
