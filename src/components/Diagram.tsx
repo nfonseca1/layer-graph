@@ -30,7 +30,10 @@ interface State {
     }[],
     colorDropdown: boolean,
     selectedChannel: number,
-    convertScreen: boolean
+    convertScreen: boolean,
+    commentsExpanded: boolean,
+    nodesExpanded: boolean,
+    subcommentsExpanded: boolean
 }
 
 export interface IDiagram {
@@ -66,7 +69,10 @@ class Diagram extends React.Component<Props, State> {
             }],
             colorDropdown: false,
             selectedChannel: 1,
-            convertScreen: false
+            convertScreen: false,
+            commentsExpanded: false,
+            nodesExpanded: false,
+            subcommentsExpanded: false
         }
 
         this.addNode = this.addNode.bind(this);
@@ -501,9 +507,17 @@ class Diagram extends React.Component<Props, State> {
                     </div>
                 </div>
                 <div className="view">
+                    <div className="layerViewControls">
+                        <button onClick={() => this.setState((state) => ({commentsExpanded: !state.commentsExpanded}))}>Expand Comments</button>
+                        <button onClick={() => this.setState((state) => ({nodesExpanded: !state.nodesExpanded}))}>Expand Nodes</button>
+                        <button onClick={() => this.setState((state) => ({subcommentsExpanded: !state.subcommentsExpanded}))}>Expand SubComments</button>
+                    </div>
                     <LayerView nodes={nodeHierarchy.reverse()}
                     channelOptions={this.state.channelOptions}
-                    goToLayer={this.goToLayer} />
+                    goToLayer={this.goToLayer}
+                    commentsExpanded={this.state.commentsExpanded}
+                    nodesExpanded={this.state.nodesExpanded}
+                    subcommentsExpanded={this.state.subcommentsExpanded} />
                     <NodeList nodes={layerNodes} 
                     parent={this.state.nodes[this.state.layerParent]} 
                     addNode={this.addNode} 
@@ -512,6 +526,9 @@ class Diagram extends React.Component<Props, State> {
                     updateNode={this.updateNode}
                     goToParentLayer={this.goToParentLayer}
                     channelOptions={this.state.channelOptions} />
+                    <div className="nodeListControls">
+
+                    </div>
                 </div>
                 {convertScreen}
             </div>
