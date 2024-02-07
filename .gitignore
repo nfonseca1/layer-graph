@@ -3,6 +3,7 @@ node_modules
 dist/*
 !dist/assets/
 notes
+backups
 Misc
 .env
 app.js*

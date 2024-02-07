@@ -29,21 +29,42 @@ $node-color: lighten($bg-color, 10%);
         }
     }
 
-    textarea {
+    .editProperties {
+        display: flex;
+        justify-content: space-between;
         height: 100%;
-        width: 88%;
-        resize: none;
-        background-color: lighten($node-color, 5%);
-        border: 1px solid darken($node-color, 3%);
-        border-top: none;
-        border-bottom: none;
-        color: $text-color;
-        &:focus {
-            outline: none;
+
+        textarea {
+            height: 100%;
+            width: 88%;
+            resize: none;
+            background-color: lighten($node-color, 5%);
+            border: 1px solid darken($node-color, 3%);
+            border-top: none;
+            border-bottom: none;
+            color: $text-color;
+            &:focus {
+                outline: none;
+            }
+            &::-webkit-scrollbar {
+                display: none;
+            }
         }
-        &::-webkit-scrollbar {
-            display: none;
+
+        div {
+            margin-right: 10%;
+            width: 30%;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            justify-content: space-between;
         }
+
+        .position {
+            width: 35%;
+            height: 2em;
+        }
+
     }
 
     .commentBubble {

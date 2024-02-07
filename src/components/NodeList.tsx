@@ -13,7 +13,7 @@ interface Props {
         name: string,
         numberId: number,
         color: string
-    }[]
+    }[],
 }
 
 interface State {
@@ -163,7 +163,11 @@ class NodeList extends React.Component<Props, State> {
     }
 
     render() {
-        let nodes: JSX.Element[] = this.props.nodes.map(n => {
+        let nodeInfo: INode[] = this.props.nodes;
+        nodeInfo.sort((a, b) => {
+            return (a.position || 0) - (b.position || 0);
+        })
+        let nodes: JSX.Element[] = nodeInfo.map((n, idx) => {
             return (
             <Node id={n.id} 
                 parent={n.parent} 
@@ -177,7 +181,8 @@ class NodeList extends React.Component<Props, State> {
                 key={n.id}
                 viewChildren={this.viewChildren}
                 updateNode={this.props.updateNode}
-                channelOptions={this.props.channelOptions} />
+                channelOptions={this.props.channelOptions}
+                index={idx} />
             )
         })
 

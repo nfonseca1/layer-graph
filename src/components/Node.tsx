@@ -8,7 +8,8 @@ export interface INode {
 	comment: string,
     subComment: string,
 	channel: number,
-	styling?: {}
+	styling?: {},
+    position?: number
 }
 
 export interface INodeUpdate {
@@ -18,7 +19,8 @@ export interface INodeUpdate {
 	comment?: string,
     subComment?: string,
 	channel?: number,
-	styling?: {}
+	styling?: {},
+    position?: number
 }
 
 interface Props extends INode {
@@ -29,13 +31,16 @@ interface Props extends INode {
         name: string,
         numberId: number,
         color: string
-    }[]
+    }[],
+    index: number
 }
 
 interface State {
     editMode: boolean,
     content: string,
-    comment: string
+    comment: string,
+    lastDeleteClick: number,
+    position: number
 }
 
 class Node extends React.Component<Props, State> {
@@ -45,12 +50,15 @@ class Node extends React.Component<Props, State> {
         this.state = {
             editMode: false,
             content: this.props.content,
-            comment: this.props.comment
+            comment: this.props.comment,
+            lastDeleteClick: 0,
+            position: this.props.index
         }
 
         this.removeNode = this.removeNode.bind(this);
         this.editNode = this.editNode.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.handleChangePosition = this.handleChangePosition.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
         this.viewChildren = this.viewChildren.bind(this);
         this.onCommentChange = this.onCommentChange.bind(this);
@@ -58,25 +66,46 @@ class Node extends React.Component<Props, State> {
     }
 
     removeNode() {
-        this.props.removeNode(this.props.id);
+        let date = Date.now();
+        if (date - this.state.lastDeleteClick < 250) {
+            this.props.removeNode(this.props.id);
+        }
+        this.setState((state) => ({
+            lastDeleteClick: date
+        }))
     }
 
     editNode() {
         let editMode = this.state.editMode;
         this.setState((state) => ({
-            editMode: !state.editMode
-        }), () => {
+                editMode: !state.editMode
+            }), () => {
             if (editMode === true) {
-                this.props.updateNode(this.props.id, {content: this.state.content})
+                let updates: any = {content: this.state.content}
+                if (this.state.position != this.props.index) {
+                    updates.position = this.state.position;
+                }
+                this.props.updateNode(this.props.id, updates)
             }
         })
     }
 
     handleChange(e: React.ChangeEvent) {
         let value = (e.target as HTMLInputElement).value;
-        value = value.replace(/[\r\n\v]+/g, '');
+        //value = value.replace(/[\r\n\v]+/g, '');
         this.setState({
             content: value
+        })
+    }
+
+    handleChangePosition(e: React.ChangeEvent) {
+        let value = (e.target as HTMLInputElement).value;
+
+        let newPos = parseInt(value);
+        if (isNaN(newPos)) newPos = this.state.position;
+        //value = value.replace(/[\r\n\v]+/g, '');
+        this.setState({
+            position: newPos
         })
     }
 
@@ -97,7 +126,7 @@ class Node extends React.Component<Props, State> {
 
     onCommentChange(e: React.ChangeEvent) {
         let value = (e.target as HTMLInputElement).value;
-        value = value.replace(/[\r\n\v]+/g, '');
+        //value = value.replace(/[\r\n\v]+/g, '');
         this.setState({
             comment: value
         })
@@ -110,7 +139,14 @@ class Node extends React.Component<Props, State> {
     render() {
         let content: JSX.Element;
         if (this.state.editMode) {
-            content = <textarea value={this.state.content} onChange={this.handleChange} onBlur={this.handleBlur}></textarea>
+            content = (
+                <div className="editProperties">
+                    <textarea value={this.state.content} onChange={this.handleChange} onBlur={this.handleBlur}>[Photo of snowboarding]</textarea>
+                    <div>
+                        <input className="position" type="text" onChange={this.handleChangePosition} placeholder="#"/>
+                    </div>
+                </div>
+            )
         }
         else {
             content = <p onClick={this.viewChildren}>{this.state.content}</p>

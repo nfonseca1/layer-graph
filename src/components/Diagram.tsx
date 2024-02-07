@@ -125,7 +125,8 @@ class Diagram extends React.Component<Props, State> {
             content: content,
             comment: comment,
             subComment: '',
-            channel: channel
+            channel: channel,
+            position: this.state.layerNodeIds.length
         }
 
         this.setState((state) => {
@@ -211,8 +212,38 @@ class Diagram extends React.Component<Props, State> {
             newNode[key] = value;
         }
 
+        // Sort layerIds based on node position
+        let order: any = [];
+        this.state.layerNodeIds.forEach((nodeId, idx) => {
+            let pos;
+            if (nodeId == id) pos = newNode.position;
+            else pos = this.state.nodes[nodeId].position ?? idx;
+
+            order.push({
+                id: nodeId,
+                pos: pos
+            })
+        })
+        order.sort((a, b) => {
+            return a.pos - b.pos;
+        })
+
+        // Reapply position to nodes
+        let newLayerNodeIds: string[] = [];
+        let newNodes: {[key: string]: INode} = {};
+        newNodes[id] = newNode;
+        order.forEach((o, idx) => {
+            newLayerNodeIds.push(o.id);
+            if (o.id != id) {
+                newNodes[o.id] = this.state.nodes[o.id];
+            }
+            newNodes[o.id].position = idx;
+        })
+
+        // Set state
         this.setState((state) => ({
-            nodes: {...state.nodes, ...{[id]: newNode}}
+            nodes: {...state.nodes, ...newNodes},
+            layerNodeIds: newLayerNodeIds
         }), () => {
             db.setNodes(this.props.id, Object.values(this.state.nodes));
             db.updateDiagram({
